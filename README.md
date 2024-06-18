@@ -2,11 +2,11 @@
 This is a simple invoice generator for Alba. Current version(2024-06-18) reads matching client invoices from PE and creates a matching supplier invoice as a PDF that will have to be uploaded manually to PE.
 
 ## Configuration
-You configure the app in the config.java file.
-BASE_URL, the base URL for the PE API
-API_KEY, the API key for the PE API
-CLIENT_ID, the client id you want to generate invoices for
-DAYS_BACK, how many days back you want to search for invoices
+The program expects a config.properties file in the resources folder.
+BASE_URL=SETME
+API_KEY=SETME
+CLIENT_ID=SETME
+DAYS_BACK=SETME
 
 ## Running the app
 If you have a development environment you can simply run Main.java
