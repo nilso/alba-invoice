@@ -4,10 +4,7 @@ target/
 !**/src/test/**/target/
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea
 *.iws
 *.iml
 *.ipr
@@ -40,3 +37,4 @@ build/
 output.pdf
 AlbaInvoice-1.0.dmg
 dependency-reduced-pom.xml
+/.out
