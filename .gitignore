@@ -37,4 +37,5 @@ build/
 output.pdf
 AlbaInvoice-1.0.dmg
 dependency-reduced-pom.xml
-/.out
+out/
+config/
