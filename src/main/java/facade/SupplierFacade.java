@@ -1,11 +1,10 @@
 package facade;
 
-import static config.config.CLIENT_ID;
-
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import config.Config;
 import domain.SupplierId;
 import domain.SupplierResponse;
 import domain.SuppliersResponse;
@@ -20,7 +19,7 @@ public class SupplierFacade {
 	}
 
 	public SupplierResponse fetchSupplier(SupplierId id) throws Exception {
-		String endpoint = String.format("/company/%s/supplier/%s", CLIENT_ID, id.getId());
+		String endpoint = String.format("/company/%s/supplier/%s", Config.getClientId(), id.getId());
 
 		String response = peHttpClient.httpCall(endpoint);
 		log.info(response);
@@ -31,7 +30,7 @@ public class SupplierFacade {
 	}
 
 	public List<SupplierResponse> fetchAllSuppliers() throws Exception {
-		String endpoint = String.format("/company/%s/supplier/", CLIENT_ID);
+		String endpoint = String.format("/company/%s/supplier/", Config.getClientId());
 
 		String response = peHttpClient.httpCall(endpoint);
 		log.info(response);

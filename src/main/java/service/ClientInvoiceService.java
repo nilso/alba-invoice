@@ -1,7 +1,5 @@
 package service;
 
-import static config.config.DAYS_BACK;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
@@ -9,6 +7,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
+import config.Config;
 import domain.Client;
 import domain.ClientInvoice;
 import domain.ClientInvoiceResponse;
@@ -32,7 +31,7 @@ public class ClientInvoiceService {
 	}
 
 	public List<ClientInvoice> getUnprocessedClientInvoices() throws Exception {
-		List<ClientInvoiceResponse> clientInvoiceResponses = clientInvoiceFacade.fetchClientInvoices(DAYS_BACK);
+		List<ClientInvoiceResponse> clientInvoiceResponses = clientInvoiceFacade.fetchClientInvoices(Config.getDaysBack());
 
 		if (clientInvoiceResponses.isEmpty()) {
 			throw new RuntimeException("No client invoices found");

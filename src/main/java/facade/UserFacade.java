@@ -1,9 +1,8 @@
 package facade;
 
-import static config.config.CLIENT_ID;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import config.Config;
 import domain.User;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,7 +15,7 @@ public class UserFacade {
 		this.peHttpClient = peHttpClient;
 	}
 	public User fetchUserName(int id) throws Exception {
-		String endpoint = String.format("/company/%s/user/%s", CLIENT_ID, id);
+		String endpoint = String.format("/company/%s/user/%s", Config.getClientId(), id);
 
 		String response = peHttpClient.httpCall(endpoint);
 

@@ -1,13 +1,12 @@
 package facade;
 
-import static config.config.CLIENT_ID;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import config.Config;
 import domain.ClientInvoiceResponse;
 import domain.ClientInvoicesResponse;
 
@@ -20,7 +19,7 @@ public class ClientInvoiceFacade {
 
 	public List<ClientInvoiceResponse> fetchClientInvoices(int daysBack) throws Exception {
 		String dateFilter = getFormattedDate(daysBack);
-		String endpoint = String.format("/company/%s/client/invoice?filter=all&invoiceDateLower=%s", CLIENT_ID, dateFilter);
+		String endpoint = String.format("/company/%s/client/invoice?filter=all&invoiceDateLower=%s", Config.getClientId(), dateFilter);
 
 		String body = peHttpClient.httpCall(endpoint);
 

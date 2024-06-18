@@ -1,7 +1,5 @@
 package facade;
 
-import static config.config.CLIENT_ID;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import config.Config;
 import domain.SupplierId;
 import domain.SupplierInvoiceResponse;
 import domain.SupplierInvoicesResponse;
@@ -27,7 +26,7 @@ public class SupplierInvoiceFacade {
 	public Map<SupplierId, List<SupplierInvoiceResponse>> fetchSerialNumberOneYearBack() throws Exception {
 		LocalDate oneYearAgo = getOneYearBack();
 		log.info("Fetching supplier invoices one year back: {}", oneYearAgo);
-		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", CLIENT_ID, oneYearAgo);
+		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), oneYearAgo);
 
 		String body = peHttpClient.httpCall(endpoint);
 

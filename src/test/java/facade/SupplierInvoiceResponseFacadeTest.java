@@ -1,6 +1,5 @@
 package facade;
 
-import static config.config.CLIENT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -17,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import config.Config;
 import domain.SupplierId;
 import domain.SupplierInvoiceResponse;
 import domain.SupplierInvoicesResponse;
@@ -34,7 +34,7 @@ class SupplierInvoiceResponseFacadeTest {
 	@Test
 	void testFetchByFinancialYear() throws Exception {
 		LocalDate firstOfSeptemberAtLeastOneYearAgo = SupplierInvoiceFacade.getOneYearBack();
-		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", CLIENT_ID, firstOfSeptemberAtLeastOneYearAgo);
+		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), firstOfSeptemberAtLeastOneYearAgo);
 		String responseBody = "{\"size\": 1, \"supplierInvoices\": [{\"supplierId\": \"1\", \"serialNumber\": \"alba01-01\"}]}";
 
 		when(peHttpClient.httpCall(endpoint)).thenReturn(responseBody);
@@ -52,7 +52,7 @@ class SupplierInvoiceResponseFacadeTest {
 	@Test
 	void testFetchByFinancialYearNoInvoices() throws Exception {
 		LocalDate firstOfSeptemberAtLeastOneYearAgo = SupplierInvoiceFacade.getOneYearBack();
-		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", CLIENT_ID, firstOfSeptemberAtLeastOneYearAgo);
+		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), firstOfSeptemberAtLeastOneYearAgo);
 		String responseBody = "{\"size\": 0, \"supplierInvoices\": []}";
 
 		when(peHttpClient.httpCall(endpoint)).thenReturn(responseBody);
