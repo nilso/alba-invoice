@@ -9,8 +9,8 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -53,9 +53,9 @@ public class PdfCreator {
 				log.info("No form fields found.");
 			}
 
-			String dateString = now.getYear() + "" + now.getMonthValue() + now.getDayOfMonth() + "/";
+			String dateString = now.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "/";
 			String homeDir = System.getProperty("user.home");
-			String fileName = "Självfaktura " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierReference() + Instant.now() + FILE_SUFFIX;
+			String fileName = "Självfaktura " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierReference() + FILE_SUFFIX;
 			String directory = homeDir + "/Documents/" + dateString;
 			String filePath = directory + fileName;
 			Path path = Paths.get(directory);

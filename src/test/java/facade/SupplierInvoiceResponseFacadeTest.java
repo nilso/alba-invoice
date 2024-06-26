@@ -44,7 +44,7 @@ class SupplierInvoiceResponseFacadeTest {
 
 		when(objectMapper.readValue(responseBody, SupplierInvoicesResponse.class)).thenReturn(supplierInvoicesResponse);
 
-		Map<SupplierId, List<SupplierInvoiceResponse>> result = supplierInvoiceFacade.fetchSerialNumberOneYearBack();
+		Map<SupplierId, List<SupplierInvoiceResponse>> result = supplierInvoiceFacade.fetchInvoicesOneYearBack();
 		assertEquals(1, result.size());
 		assertEquals(1, result.get(new SupplierId("1")).size());
 	}
@@ -60,7 +60,7 @@ class SupplierInvoiceResponseFacadeTest {
 		SupplierInvoicesResponse supplierInvoicesResponse = new SupplierInvoicesResponse(List.of(), 0, 0, 0);
 		when(objectMapper.readValue(responseBody, SupplierInvoicesResponse.class)).thenReturn(supplierInvoicesResponse);
 
-		Map<SupplierId, List<SupplierInvoiceResponse>> result = supplierInvoiceFacade.fetchSerialNumberOneYearBack();
+		Map<SupplierId, List<SupplierInvoiceResponse>> result = supplierInvoiceFacade.fetchInvoicesOneYearBack();
 		assertTrue(result.isEmpty());
 	}
 }

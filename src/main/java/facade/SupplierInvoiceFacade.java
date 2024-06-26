@@ -23,7 +23,7 @@ public class SupplierInvoiceFacade {
 		this.objectMapper = objectMapper;
 	}
 
-	public Map<SupplierId, List<SupplierInvoiceResponse>> fetchSerialNumberOneYearBack() throws Exception {
+	public Map<SupplierId, List<SupplierInvoiceResponse>> fetchInvoicesOneYearBack() throws Exception {
 		LocalDate oneYearAgo = getOneYearBack();
 		log.info("Fetching supplier invoices one year back: {}", oneYearAgo);
 		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), oneYearAgo);

@@ -4,6 +4,7 @@ import static util.EUCountryCodes.EU_COUNTRY_CODES;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,16 +26,19 @@ import util.BigDecimalUtil;
 @Slf4j
 public class SupplierInvoiceService {
 
+	private static final Map<SupplierId, Integer> supplierInvoiceCounter = new HashMap<>();
+
 	public SupplierInvoiceService() {
+		supplierInvoiceCounter.clear();
 	}
 
 	public List<SupplierInvoice> createSupplierInvoices(List<ClientInvoice> clientInvoices,
-			Map<SupplierId, SerialNumber> newSerialNumbers,
+			Map<SupplierId, SerialNumber> currentSerialNumbers,
 			Map<InvoiceId, Supplier> supplierMap,
 			Map<InvoiceId, User> userMap) {
 		return clientInvoices.stream().map(clientInvoice -> {
 			Supplier supplier = supplierMap.get(clientInvoice.id());
-			String newSerialNumber = createSerialNumber(newSerialNumbers.get(supplier.id()));
+			String newSerialNumber = createSerialNumber(currentSerialNumbers, supplier.id());
 			PaymentMethod paymentMethod = supplier.paymentMethod();
 			String supplierCountryCode = supplier.countryCode();
 			BigDecimal vatRate = calculateVatRate(clientInvoice);
@@ -70,8 +74,11 @@ public class SupplierInvoiceService {
 
 	}
 
-	private static String createSerialNumber(SerialNumber serialNumber) {
-		return serialNumber.prefix() + "-" + serialNumber.suffix();
+	private static String createSerialNumber(Map<SupplierId, SerialNumber> currentSerialNumbers, SupplierId supplierId) {
+		int currentSupplierInvoiceCounter = supplierInvoiceCounter.getOrDefault(supplierId, 0);
+		SerialNumber newSerialNumber = currentSerialNumbers.get(supplierId).incrementSuffix(1 + currentSupplierInvoiceCounter);
+		supplierInvoiceCounter.put(supplierId, currentSupplierInvoiceCounter + 1);
+		return newSerialNumber.prefix() + "-" + newSerialNumber.suffix();
 	}
 
 	private static BigDecimal calculateVatRate(ClientInvoice clientInvoice) {

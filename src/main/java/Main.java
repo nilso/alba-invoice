@@ -1,7 +1,6 @@
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -53,7 +52,7 @@ public class Main {
 
 			Map<InvoiceId, User> userMap = userService.getUserMap(clientInvoices);
 			Map<InvoiceId, Supplier> supplierMap = supplierService.getSupplierMap(clientInvoices);
-			Map<SupplierId, SerialNumber> newSerialNumbers = serialNumberService.getNewSerialNumber(supplierMap.values().stream().toList());
+			Map<SupplierId, SerialNumber> newSerialNumbers = serialNumberService.getCurrentSerialOrNewIfNone(supplierMap.values().stream().toList());
 
 			List<SupplierInvoice> supplierInvoices = supplierInvoiceService.createSupplierInvoices(clientInvoices,
 					newSerialNumbers,
