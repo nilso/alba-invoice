@@ -16,8 +16,8 @@ import domain.PaymentMethod;
 import domain.ProductRow;
 import domain.SerialNumber;
 import domain.Supplier;
-import domain.SupplierId;
 import domain.SupplierInvoice;
+import domain.SupplierNameKey;
 import domain.User;
 import domain.VatInformationTexts;
 import lombok.extern.slf4j.Slf4j;
@@ -26,19 +26,19 @@ import util.BigDecimalUtil;
 @Slf4j
 public class SupplierInvoiceService {
 
-	private static final Map<SupplierId, Integer> supplierInvoiceCounter = new HashMap<>();
+	private static final Map<SupplierNameKey, Integer> supplierInvoiceCounter = new HashMap<>();
 
 	public SupplierInvoiceService() {
 		supplierInvoiceCounter.clear();
 	}
 
 	public List<SupplierInvoice> createSupplierInvoices(List<ClientInvoice> clientInvoices,
-			Map<SupplierId, SerialNumber> currentSerialNumbers,
+			Map<SupplierNameKey, SerialNumber> currentSerialNumbers,
 			Map<InvoiceId, Supplier> supplierMap,
 			Map<InvoiceId, User> userMap) {
 		return clientInvoices.stream().map(clientInvoice -> {
 			Supplier supplier = supplierMap.get(clientInvoice.id());
-			String newSerialNumber = createSerialNumber(currentSerialNumbers, supplier.id());
+			String newSerialNumber = createSerialNumber(currentSerialNumbers, supplier.name());
 			PaymentMethod paymentMethod = supplier.paymentMethod();
 			String supplierCountryCode = supplier.countryCode();
 			BigDecimal vatRate = calculateVatRate(clientInvoice);
@@ -74,10 +74,11 @@ public class SupplierInvoiceService {
 
 	}
 
-	private static String createSerialNumber(Map<SupplierId, SerialNumber> currentSerialNumbers, SupplierId supplierId) {
-		int currentSupplierInvoiceCounter = supplierInvoiceCounter.getOrDefault(supplierId, 0);
-		SerialNumber newSerialNumber = currentSerialNumbers.get(supplierId).incrementSuffix(1 + currentSupplierInvoiceCounter);
-		supplierInvoiceCounter.put(supplierId, currentSupplierInvoiceCounter + 1);
+	private static String createSerialNumber(Map<SupplierNameKey, SerialNumber> currentSerialNumbers, String supplierName) {
+		SupplierNameKey supplierNameKey = new SupplierNameKey(supplierName);
+		int currentSupplierInvoiceCounter = supplierInvoiceCounter.getOrDefault(supplierNameKey, 0);
+		SerialNumber newSerialNumber = currentSerialNumbers.get(supplierNameKey).incrementSuffix(1 + currentSupplierInvoiceCounter);
+		supplierInvoiceCounter.put(supplierNameKey, currentSupplierInvoiceCounter + 1);
 		return newSerialNumber.prefix() + "-" + newSerialNumber.suffix();
 	}
 

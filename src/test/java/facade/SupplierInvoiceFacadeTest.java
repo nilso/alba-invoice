@@ -39,7 +39,7 @@ class SupplierInvoiceFacadeTest {
 
 		when(peHttpClient.httpGet(endpoint)).thenReturn(responseBody);
 
-		SupplierInvoiceResponse invoice = new SupplierInvoiceResponse(new SupplierId("1"), "alba01-01");
+		SupplierInvoiceResponse invoice = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(new SupplierId("1")), "alba01-01");
 		SupplierInvoicesResponse supplierInvoicesResponse = new SupplierInvoicesResponse(List.of(invoice), 0, 0, 1);
 
 		when(objectMapper.readValue(responseBody, SupplierInvoicesResponse.class)).thenReturn(supplierInvoicesResponse);

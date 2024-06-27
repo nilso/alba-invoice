@@ -45,7 +45,7 @@ public class SupplierInvoiceFacade {
 
 		log.info("Fetched {} supplier invoices for the financial year starting from: {}", supplierInvoicesResponse.size(), oneYearAgo);
 		return supplierInvoicesResponse.supplierInvoiceResponses().stream()
-				.collect(Collectors.groupingBy(SupplierInvoiceResponse::supplierId));
+				.collect(Collectors.groupingBy(supplierInvoiceResponse -> supplierInvoiceResponse.supplierRef().supplierId()));
 	}
 
 	public static LocalDate getOneYearBack() {

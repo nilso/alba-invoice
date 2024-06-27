@@ -1,5 +1,6 @@
 package service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +10,12 @@ import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierId;
 import domain.SupplierInvoiceResponse;
+import domain.SupplierNameKey;
 import facade.SupplierInvoiceFacade;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SerialNumberService {
-	//TODO behöver hålla koll på att t.ex. Speranza ska ha samma löpnr serie för alla fakturor. Med samma namn?
 	private static int nrOfAlreadyIncrementedPrefix;
 
 	private final SupplierInvoiceFacade supplierInvoiceFacade;
@@ -24,22 +25,42 @@ public class SerialNumberService {
 		nrOfAlreadyIncrementedPrefix = 0;
 	}
 
-	public Map<SupplierId, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers) {
-		Map<SupplierId, SerialNumber> serialNumberMap = new HashMap<>();
+	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers) throws Exception {
+		Map<SupplierNameKey, SerialNumber> serialNumberMap = new HashMap<>();
+
+		Map<SupplierNameKey, List<SupplierId>> supplierNameIdMap = new HashMap<>();
 
 		suppliers.forEach(supplier -> {
+			SupplierNameKey supplierName = new SupplierNameKey(supplier.name());
+			if (supplierNameIdMap.containsKey(supplierName)) {
+				supplierNameIdMap.get(supplierName).add(supplier.id());
+			} else {
+				List<SupplierId> supplierIds = new ArrayList<>();
+				supplierIds.add(supplier.id());
+				supplierNameIdMap.put(supplierName, supplierIds);
+			}
+		});
+
+		Map<SupplierId, List<SupplierInvoiceResponse>> supplierInvoices = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+
+		supplierNameIdMap.forEach((key, supplierIds) -> {
 			try {
+				List<SupplierInvoiceResponse> currentSupplierInvoices = supplierIds.stream()
+						.filter(supplierInvoices::containsKey)
+						.map(supplierInvoices::get)
+						.flatMap(List::stream)
+						.toList();
+
 				SerialNumber serialNumber;
-				Map<SupplierId, List<SupplierInvoiceResponse>> supplierInvoices = supplierInvoiceFacade.fetchInvoicesOneYearBack();
-				if (supplierInvoices.containsKey(supplier.id())) {
-					List<SupplierInvoiceResponse> supplierInvoiceResponse = supplierInvoices.get(supplier.id());
-					serialNumber = getHighestSerialNumber(supplierInvoiceResponse);
-				} else {
-					log.info("No supplier invoices found for supplier with ID: {}", supplier.id());
+				if (currentSupplierInvoices.isEmpty()) {
+					log.info("No supplier invoices found for supplier with IDs: {} and SupplierNameKey: {}", supplierIds, key);
 					serialNumber = createNewSerial(supplierInvoices);
+				} else {
+					log.info("Found supplier invoices for supplier with IDs: {} and SupplierNameKey: {}", supplierIds, key);
+					serialNumber = getHighestSerialNumber(currentSupplierInvoices);
 				}
 
-				serialNumberMap.put(supplier.id(), serialNumber);
+				supplierIds.forEach(supplierId -> serialNumberMap.put(key, serialNumber));
 			} catch (Exception e) {
 				log.error("Failed to fetch supplier invoices: ", e);
 			}
@@ -49,22 +70,10 @@ public class SerialNumberService {
 		return serialNumberMap;
 	}
 
-	private static SerialNumber getHighestSerialNumber(List<SupplierInvoiceResponse> supplierInvoiceResponses) {
-		List<SerialNumber> serialNumbers = supplierInvoiceResponses.stream()
-				.map(SupplierInvoiceResponse::serialNumber)
-				.map(SerialNumberService::extractSerialNumber)
-				.toList();
-
-		return serialNumbers.stream()
-				.max(Comparator.comparingInt(SerialNumber::suffix))
-				.map(sn -> new SerialNumber(sn.prefix(), sn.suffix()))
-				.orElseThrow(() -> new IllegalArgumentException("Unable to find SerialNumber with the largest suffix"));
-	}
-
 	private static SerialNumber createNewSerial(Map<SupplierId, List<SupplierInvoiceResponse>> supplierInvoices) {
 		if (supplierInvoices.isEmpty()) {
 			int newPrefixNumber = 1 + nrOfAlreadyIncrementedPrefix;
-			SerialNumber serialNumber = new SerialNumber("alba" + newPrefixNumber, 1);
+			SerialNumber serialNumber = new SerialNumber("alba" + newPrefixNumber, 0);
 			nrOfAlreadyIncrementedPrefix++;
 			return serialNumber;
 		}
@@ -83,7 +92,19 @@ public class SerialNumberService {
 		nrOfAlreadyIncrementedPrefix++;
 		int highestNumber = extractAlbaNumber(highestAlba.prefix());
 		String newPrefix = String.format("alba%02d", highestNumber + nrOfAlreadyIncrementedPrefix);
-		return new SerialNumber(newPrefix, 1);
+		return new SerialNumber(newPrefix, 0);
+	}
+
+	private static SerialNumber getHighestSerialNumber(List<SupplierInvoiceResponse> supplierInvoiceResponses) {
+		List<SerialNumber> serialNumbers = supplierInvoiceResponses.stream()
+				.map(SupplierInvoiceResponse::serialNumber)
+				.map(SerialNumberService::extractSerialNumber)
+				.toList();
+
+		return serialNumbers.stream()
+				.max(Comparator.comparingInt(SerialNumber::suffix))
+				.map(sn -> new SerialNumber(sn.prefix(), sn.suffix()))
+				.orElseThrow(() -> new IllegalArgumentException("Unable to find SerialNumber with the largest suffix"));
 	}
 
 	private static SerialNumber extractSerialNumber(String input) {

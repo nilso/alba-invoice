@@ -11,6 +11,7 @@ import domain.Supplier;
 import domain.SupplierId;
 import domain.SupplierInvoice;
 import domain.SupplierInvoiceRequest;
+import domain.SupplierNameKey;
 import domain.User;
 import facade.ClientFacade;
 import facade.ClientInvoiceFacade;
@@ -53,7 +54,7 @@ public class SendInvoicesToPeMain {
 
 			Map<InvoiceId, User> userMap = userService.getUserMap(clientInvoices);
 			Map<InvoiceId, Supplier> supplierMap = supplierService.getSupplierMap(clientInvoices);
-			Map<SupplierId, SerialNumber> newSerialNumbers = serialNumberService.getCurrentSerialOrNewIfNone(supplierMap.values().stream().toList());
+			Map<SupplierNameKey, SerialNumber> newSerialNumbers = serialNumberService.getCurrentSerialOrNewIfNone(supplierMap.values().stream().toList());
 
 			List<SupplierInvoice> supplierInvoices = supplierInvoiceService.createSupplierInvoices(clientInvoices,
 					newSerialNumbers,

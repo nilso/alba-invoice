@@ -20,6 +20,7 @@ import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierId;
 import domain.SupplierInvoiceResponse;
+import domain.SupplierNameKey;
 import facade.SupplierInvoiceFacade;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,7 +30,6 @@ class SerialNumberServiceTest {
 
 	@Mock
 	private SupplierInvoiceFacade supplierInvoiceFacade;
-
 
 	@BeforeEach
 	void setUp() {
@@ -49,15 +49,15 @@ class SerialNumberServiceTest {
 		SupplierId supplierId2 = new SupplierId("2");
 		Supplier supplier2 = new Supplier(supplierId2,
 				"SE",
-				"Nils AB",
+				"Nils AB 2",
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
 				"VAT1234567890");
 		List<Supplier> suppliers = List.of(supplier, supplier2);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(supplierId, "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(supplierId2, "alba02-02");
+		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 		Map<SupplierId, List<SupplierInvoiceResponse>> supplierInvoiceResponses = new HashMap<>();
 		supplierInvoiceResponses.put(supplier.id(), List.of(invoice1));
 		supplierInvoiceResponses.put(supplier2.id(), List.of(invoice2));
@@ -67,9 +67,9 @@ class SerialNumberServiceTest {
 		SerialNumber expectedSerialNumber = new SerialNumber("alba01", 1);
 		SerialNumber expectedSerialNumber2 = new SerialNumber("alba02", 2);
 
-		Map<SupplierId, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(suppliers);
-		assertEquals(expectedSerialNumber, result.get(supplier.id()));
-		assertEquals(expectedSerialNumber2, result.get(supplier2.id()));
+		Map<SupplierNameKey, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(suppliers);
+		assertEquals(expectedSerialNumber, result.get(new SupplierNameKey(supplier.name())));
+		assertEquals(expectedSerialNumber2, result.get(new SupplierNameKey(supplier2.name())));
 	}
 
 	@Test
@@ -86,7 +86,7 @@ class SerialNumberServiceTest {
 		SupplierId supplierId2 = new SupplierId("2");
 		Supplier supplier2 = new Supplier(supplierId2,
 				"SE",
-				"Nils AB",
+				"Nils AB 2",
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
@@ -95,15 +95,15 @@ class SerialNumberServiceTest {
 		SupplierId supplierId3 = new SupplierId("3");
 		Supplier supplier3 = new Supplier(supplierId3,
 				"SE",
-				"Nils AB",
+				"Nils AB 3",
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
 				"VAT1234567890");
 		List<Supplier> suppliers = List.of(supplier, supplier2, supplier3);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(supplierId, "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(supplierId2, "alba02-02");
+		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 		Map<SupplierId, List<SupplierInvoiceResponse>> supplierInvoiceResponses = new HashMap<>();
 		supplierInvoiceResponses.put(supplier.id(), List.of(invoice1));
 		supplierInvoiceResponses.put(supplier2.id(), List.of(invoice2));
@@ -114,10 +114,10 @@ class SerialNumberServiceTest {
 		SerialNumber expectedSerialNumber2 = new SerialNumber("alba02", 2);
 		SerialNumber expectedSerialNumber3 = new SerialNumber("alba03", 1);
 
-		Map<SupplierId, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(suppliers);
-		assertEquals(expectedSerialNumber, result.get(supplier.id()));
-		assertEquals(expectedSerialNumber2, result.get(supplier2.id()));
-		assertEquals(expectedSerialNumber3, result.get(supplier3.id()));
+		Map<SupplierNameKey, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(suppliers);
+		assertEquals(expectedSerialNumber, result.get(new SupplierNameKey(supplier.name())));
+		assertEquals(expectedSerialNumber2, result.get(new SupplierNameKey(supplier2.name())));
+		assertEquals(expectedSerialNumber3, result.get(new SupplierNameKey(supplier3.name())));
 	}
 
 	@Test
@@ -137,9 +137,9 @@ class SerialNumberServiceTest {
 
 		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(supplierInvoiceResponses);
 
-		SerialNumber expectedSerialNumber3 = new SerialNumber("alba1", 1);
+		SerialNumber expectedSerialNumber3 = new SerialNumber("alba1", 0);
 
-		Map<SupplierId, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(suppliers);
-		assertEquals(expectedSerialNumber3, result.get(supplier3.id()));
+		Map<SupplierNameKey, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(suppliers);
+		assertEquals(expectedSerialNumber3, result.get(new SupplierNameKey(supplier3.name())));
 	}
 }
