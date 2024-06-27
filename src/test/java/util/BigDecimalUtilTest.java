@@ -1,6 +1,7 @@
 package util;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 
@@ -11,7 +12,7 @@ class BigDecimalUtilTest {
 	@Test
 	void bigDecimalToPercent() {
 		BigDecimal number = new BigDecimal("0.1000");
-		String expected= "10";
+		String expected = "10";
 		assertEquals(expected, BigDecimalUtil.bigDecimalToPercent(number));
 	}
 

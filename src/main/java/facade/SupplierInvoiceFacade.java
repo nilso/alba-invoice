@@ -74,7 +74,7 @@ public class SupplierInvoiceFacade {
 				supplierInvoice.clientInvoice().invoiceDate(),
 				supplierInvoice.clientInvoice().dueDate(),
 				supplierInvoice.clientInvoice().dueDate(), //TODO paymentdate needed?!
-				bigDecimalToBigInteger(supplierInvoice.grossPrice()),
+				bigDecimalToBigInteger(supplierInvoice.amountDue()),
 				bigDecimalToBigInteger(supplierInvoice.vatAmount()),
 				supplierInvoice.clientInvoice().currency(),
 				new BigInteger("1"), //TODO exchange rate needed?!
@@ -99,8 +99,8 @@ public class SupplierInvoiceFacade {
 	}
 
 	private SupplierInvoiceRequest.Accounts mapAccountingAccounts(SupplierInvoice supplierInvoice) {
-		BigDecimal netPrice = supplierInvoice.grossPrice().subtract(supplierInvoice.vatAmount());
-		return new SupplierInvoiceRequest.Accounts(List.of(new SupplierInvoiceRequest.AccountingAccount(2440, bigDecimalToBigInteger(supplierInvoice.grossPrice()).negate()),
+		BigDecimal netPrice = supplierInvoice.amountDue().subtract(supplierInvoice.vatAmount());
+		return new SupplierInvoiceRequest.Accounts(List.of(new SupplierInvoiceRequest.AccountingAccount(2440, bigDecimalToBigInteger(supplierInvoice.amountDue()).negate()),
 				new SupplierInvoiceRequest.AccountingAccount(2641, bigDecimalToBigInteger(supplierInvoice.vatAmount())),
 				new SupplierInvoiceRequest.AccountingAccount(5410, bigDecimalToBigInteger(netPrice))));
 	}

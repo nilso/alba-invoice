@@ -142,8 +142,8 @@ public class PdfCreator {
 	private static void writeSummarySection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
 		ClientInvoice clientInvoice = supplierInvoice.clientInvoice();
 		String vatRateInPercent = bigDecimalToPercent(supplierInvoice.vatRate());
-		String commissionVatRateInPercent = bigDecimalToPercent(supplierInvoice.commissionVatRate());
-		String commissionRateInPercent = bigDecimalToPercent(clientInvoice.commissionRate());
+		String commissionVatRateInPercent = bigDecimalToPercent(supplierInvoice.commission().commissionVatRate());
+		String commissionRateInPercent = bigDecimalToPercent(supplierInvoice.commission().commissionRate());
 
 		PDField priceCurrencyField = acroForm.getField("f_priceCurrency");
 		priceCurrencyField.setValue("A-pris " + supplierInvoice.clientInvoice().currency());
@@ -170,20 +170,20 @@ public class PdfCreator {
 		commissionRateField.setValue(commissionRateInPercent + "%");
 
 		PDField netCommissionField = acroForm.getField("f_netCommission");
-		netCommissionField.setValue(supplierInvoice.netCommissionPrice().negate().toString());
+		netCommissionField.setValue(supplierInvoice.commission().netCommission().negate().toString());
 
 		PDField commissionVatField = acroForm.getField("f_commissionVat");
-		commissionVatField.setValue(supplierInvoice.commissionVatAmount().negate().toString());
+		commissionVatField.setValue(supplierInvoice.commission().commissionVatAmount().negate().toString());
 
 		PDField grossCommissionField = acroForm.getField("f_grossCommission");
-		grossCommissionField.setValue(supplierInvoice.grossCommissionPrice().negate().toString());
+		grossCommissionField.setValue(supplierInvoice.commission().grossCommission().negate().toString());
 
-		if (supplierInvoice.commissionRoundingAmount().isPresent()) {
+		if (supplierInvoice.commission().commissionRoundingAmount().isPresent()) {
 			PDField commissionRoundingTextField = acroForm.getField("f_commissionRoundingText");
 			commissionRoundingTextField.setValue("Öresavrundning");
 
 			PDField commissionRoundingAmountField = acroForm.getField("f_commissionRoundingAmount");
-			commissionRoundingAmountField.setValue(supplierInvoice.commissionRoundingAmount().get().toString());
+			commissionRoundingAmountField.setValue(supplierInvoice.commission().commissionRoundingAmount().get().toString());
 		}
 
 		if (supplierInvoice.vatInformationTexts().supplierVatInformationText().isPresent()) {
@@ -195,7 +195,7 @@ public class PdfCreator {
 		amountDueCurrencyField.setValue(clientInvoice.currency());
 
 		PDField amountDueField = acroForm.getField("f_amountDue");
-		amountDueField.setValue(supplierInvoice.grossPrice().toString()); //TODO av någon anledning får jag med örena här...
+		amountDueField.setValue(supplierInvoice.amountDue().toString());
 	}
 
 	private static void writeRows(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
@@ -237,7 +237,7 @@ public class PdfCreator {
 				roundingTextField.setValue("Öresavrundning");
 
 				PDField roundingAmountField = acroForm.getField("f_productRowRoundingAmount");
-				roundingAmountField.setValue(clientInvoice.roundingAmount().get().toString());
+				roundingAmountField.setValue(clientInvoice.roundingAmount().get().negate().toString());
 			}
 
 			PDField supplierNameField = acroForm.getField("f_supplierName");

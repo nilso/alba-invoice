@@ -20,8 +20,10 @@ public class BigDecimalUtil {
 	}
 
 	public static String bigDecimalToPercent(BigDecimal number) {
-		return number.multiply(new BigDecimal("100"))
-				.setScale(0, RoundingMode.HALF_UP)
-				.toString();
+		BigDecimal result = number.multiply(new BigDecimal("100"));
+		if (result.stripTrailingZeros().scale() > 0) {
+			result = result.setScale(2, RoundingMode.HALF_UP);
+		}
+		return result.stripTrailingZeros().toPlainString();
 	}
 }
