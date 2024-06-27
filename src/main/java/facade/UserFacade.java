@@ -17,7 +17,7 @@ public class UserFacade {
 	public User fetchUserName(int id) throws Exception {
 		String endpoint = String.format("/company/%s/user/%s", Config.getClientId(), id);
 
-		String response = peHttpClient.httpCall(endpoint);
+		String response = peHttpClient.httpGet(endpoint);
 
 		ObjectMapper objectMapper = new ObjectMapper();
 		User user = objectMapper.readValue(response, User.class);

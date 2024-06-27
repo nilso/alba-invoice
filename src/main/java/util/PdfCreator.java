@@ -2,6 +2,7 @@ package util;
 
 import static util.BigDecimalUtil.bigDecimalToPercent;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -22,19 +23,20 @@ import domain.Address;
 import domain.ClientInvoice;
 import domain.PaymentMethod;
 import domain.SupplierInvoice;
+import domain.SupplierInvoiceRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PdfCreator {
 	private static final String FILE_SUFFIX = ".pdf";
 	String SE_TEMPLATE = "selfinvoice_template_SE.pdf";
-	String EN_TEMPLATE = "selfinvoice_template_SE.pdf";
+	String EN_TEMPLATE = "selfinvoice_template_SE.pdf"; //TODO need english template
 
 	public PdfCreator() {
 
 	}
 
-	public void createPdf(SupplierInvoice supplierInvoice, LocalDate now) {
+	public SupplierInvoiceRequest.File createPdf(SupplierInvoice supplierInvoice, LocalDate now) {
 		String file;
 		if (supplierInvoice.supplierCountryCode().equals("SE")) {
 			file = Objects.requireNonNull(this.getClass().getClassLoader().getResource(SE_TEMPLATE)).getFile();
@@ -63,9 +65,26 @@ public class PdfCreator {
 				Files.createDirectories(path);
 			}
 			document.save(filePath);
+			return new SupplierInvoiceRequest.File(fileName, convertPdfToIntArray(document));
 		} catch (IOException e) {
 			log.error("An error occurred while trying to read the PDF: ", e);
+			throw new RuntimeException(e);
 		}
+	}
+
+	public static int[] convertPdfToIntArray(PDDocument document) throws IOException {
+		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+			document.save(byteArrayOutputStream);
+			return convertByteArrayToIntArray(byteArrayOutputStream.toByteArray());
+		}
+	}
+
+	public static int[] convertByteArrayToIntArray(byte[] byteArray) {
+		int[] intArray = new int[byteArray.length];
+		for (int i = 0; i < byteArray.length; i++) {
+			intArray[i] = byteArray[i] & 0xFF;  // Convert each byte to an unsigned integer
+		}
+		return intArray;
 	}
 
 	private static void writeSellerSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {

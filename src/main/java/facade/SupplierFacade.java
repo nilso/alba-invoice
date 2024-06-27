@@ -21,7 +21,7 @@ public class SupplierFacade {
 	public SupplierResponse fetchSupplier(SupplierId id) throws Exception {
 		String endpoint = String.format("/company/%s/supplier/%s", Config.getClientId(), id.getId());
 
-		String response = peHttpClient.httpCall(endpoint);
+		String response = peHttpClient.httpGet(endpoint);
 		log.info(response);
 		ObjectMapper objectMapper = new ObjectMapper();
 		SupplierResponse supplier = objectMapper.readValue(response, SupplierResponse.class);
@@ -32,7 +32,7 @@ public class SupplierFacade {
 	public List<SupplierResponse> fetchAllSuppliers() throws Exception {
 		String endpoint = String.format("/company/%s/supplier/", Config.getClientId());
 
-		String response = peHttpClient.httpCall(endpoint);
+		String response = peHttpClient.httpGet(endpoint);
 		log.info(response);
 		ObjectMapper objectMapper = new ObjectMapper();
 		SuppliersResponse suppliersResponse = objectMapper.readValue(response, SuppliersResponse.class);

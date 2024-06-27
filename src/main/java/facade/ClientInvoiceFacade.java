@@ -21,7 +21,7 @@ public class ClientInvoiceFacade {
 		String dateFilter = getFormattedDate(daysBack);
 		String endpoint = String.format("/company/%s/client/invoice?filter=all&invoiceDateLower=%s", Config.getClientId(), dateFilter);
 
-		String body = peHttpClient.httpCall(endpoint);
+		String body = peHttpClient.httpGet(endpoint);
 
 		ObjectMapper objectMapper = new ObjectMapper();
 		ClientInvoicesResponse clientInvoicesResponse = objectMapper.readValue(body, ClientInvoicesResponse.class);

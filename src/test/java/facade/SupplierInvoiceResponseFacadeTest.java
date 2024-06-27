@@ -37,7 +37,7 @@ class SupplierInvoiceResponseFacadeTest {
 		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), firstOfSeptemberAtLeastOneYearAgo);
 		String responseBody = "{\"size\": 1, \"supplierInvoices\": [{\"supplierId\": \"1\", \"serialNumber\": \"alba01-01\"}]}";
 
-		when(peHttpClient.httpCall(endpoint)).thenReturn(responseBody);
+		when(peHttpClient.httpGet(endpoint)).thenReturn(responseBody);
 
 		SupplierInvoiceResponse invoice = new SupplierInvoiceResponse(new SupplierId("1"), "alba01-01");
 		SupplierInvoicesResponse supplierInvoicesResponse = new SupplierInvoicesResponse(List.of(invoice), 0, 0, 1);
@@ -55,7 +55,7 @@ class SupplierInvoiceResponseFacadeTest {
 		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), firstOfSeptemberAtLeastOneYearAgo);
 		String responseBody = "{\"size\": 0, \"supplierInvoices\": []}";
 
-		when(peHttpClient.httpCall(endpoint)).thenReturn(responseBody);
+		when(peHttpClient.httpGet(endpoint)).thenReturn(responseBody);
 
 		SupplierInvoicesResponse supplierInvoicesResponse = new SupplierInvoicesResponse(List.of(), 0, 0, 0);
 		when(objectMapper.readValue(responseBody, SupplierInvoicesResponse.class)).thenReturn(supplierInvoicesResponse);

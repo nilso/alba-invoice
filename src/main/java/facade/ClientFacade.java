@@ -19,7 +19,7 @@ public class ClientFacade {
 	public ClientResponse fetchClientById(ClientId clientId) throws Exception {
 		String endpoint = String.format("/company/%s/client/%s", Config.getClientId(), clientId.getId());
 
-		String response = peHttpClient.httpCall(endpoint);
+		String response = peHttpClient.httpGet(endpoint);
 		log.info(response);
 		ObjectMapper objectMapper = new ObjectMapper();
 		ClientResponse client = objectMapper.readValue(response, ClientResponse.class);
