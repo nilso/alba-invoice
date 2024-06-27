@@ -58,7 +58,7 @@ public class SupplierInvoiceFacade {
 
 		String endpoint = String.format("/company/%s/supplier/invoice", Config.getClientId());
 		String request = objectMapper.writeValueAsString(mapSupplierInvoiceRequest(supplierInvoice, file));
-		log.info("Sending supplier invoice to PE: {}", request);
+		log.info("Sending supplier invoice to PE: {}", supplierInvoice);
 		peHttpClient.httpPut(endpoint,
 				request);
 	}
@@ -82,7 +82,7 @@ public class SupplierInvoiceFacade {
 				"", //TODO po-nr needed?!
 				"", //TODO ocr needed?!
 				mapAccountingAccounts(supplierInvoice),
-				List.of(file));
+				new SupplierInvoiceRequest.Files(List.of(file)));
 	}
 
 	private DepositAccount mapDepositAccount(SupplierInvoice supplierInvoice) {
@@ -95,13 +95,13 @@ public class SupplierInvoiceFacade {
 	}
 
 	private BigInteger bigDecimalToBigInteger(BigDecimal bigDecimal) {
-		return bigDecimal.setScale(2, RoundingMode.HALF_UP).toBigInteger();
+		return bigDecimal.multiply(new BigDecimal("100")).setScale(0, RoundingMode.HALF_UP).toBigInteger();
 	}
 
-	private List<SupplierInvoiceRequest.AccountingAccount> mapAccountingAccounts(SupplierInvoice supplierInvoice) {
+	private SupplierInvoiceRequest.Accounts mapAccountingAccounts(SupplierInvoice supplierInvoice) {
 		BigDecimal netPrice = supplierInvoice.grossPrice().subtract(supplierInvoice.vatAmount());
-		return List.of(new SupplierInvoiceRequest.AccountingAccount(2440, bigDecimalToBigInteger(supplierInvoice.grossPrice()).negate()),
+		return new SupplierInvoiceRequest.Accounts(List.of(new SupplierInvoiceRequest.AccountingAccount(2440, bigDecimalToBigInteger(supplierInvoice.grossPrice()).negate()),
 				new SupplierInvoiceRequest.AccountingAccount(2641, bigDecimalToBigInteger(supplierInvoice.vatAmount())),
-				new SupplierInvoiceRequest.AccountingAccount(5410, bigDecimalToBigInteger(netPrice)));
+				new SupplierInvoiceRequest.AccountingAccount(5410, bigDecimalToBigInteger(netPrice))));
 	}
 }

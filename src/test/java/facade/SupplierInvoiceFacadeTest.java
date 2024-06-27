@@ -22,7 +22,7 @@ import domain.SupplierInvoiceResponse;
 import domain.SupplierInvoicesResponse;
 
 @ExtendWith(MockitoExtension.class)
-class SupplierInvoiceResponseFacadeTest {
+class SupplierInvoiceFacadeTest {
 
 	@Mock
 	ObjectMapper objectMapper;
@@ -62,5 +62,12 @@ class SupplierInvoiceResponseFacadeTest {
 
 		Map<SupplierId, List<SupplierInvoiceResponse>> result = supplierInvoiceFacade.fetchInvoicesOneYearBack();
 		assertTrue(result.isEmpty());
+	}
+
+	@Test
+	void actuallyFetch() throws Exception {
+		PEHttpClient realClient = new PEHttpClient();
+		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient, new ObjectMapper());
+		System.out.println(realFacade.fetchInvoicesOneYearBack());
 	}
 }

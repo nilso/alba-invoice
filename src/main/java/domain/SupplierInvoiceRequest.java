@@ -22,17 +22,24 @@ public record SupplierInvoiceRequest(
 		@JsonProperty("reference-nr") String referenceNr,
 		@JsonProperty("po-nr") String poNr,
 		String ocr,
-		@JsonProperty("accounts") List<AccountingAccount> accountingAccounts,
-		List<File> files
+		Accounts accounts,
+		Files files
 ) {
 
 	public record Id(int id) {
+	}
+
+	public record Files(List<File> files) {
 	}
 
 	public record File(String filename, int[] data) {
 	}
 
 	public record DepositAccount(String type, String nr) {
+	}
+
+	public record Accounts(List<AccountingAccount> accounts) {
+
 	}
 
 	public record AccountingAccount(@JsonProperty("account-nr") int accountNr,
