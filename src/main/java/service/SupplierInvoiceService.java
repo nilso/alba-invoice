@@ -1,6 +1,7 @@
 package service;
 
-import static util.EUCountryCodes.EU_COUNTRY_CODES;
+import static util.CommissionCalculator.calculateCommission;
+import static util.VatInformationTextUtil.createVatInformationText;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -9,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import domain.Client;
 import domain.ClientInvoice;
 import domain.Commission;
 import domain.InvoiceId;
@@ -46,7 +46,9 @@ public class SupplierInvoiceService {
 			BigDecimal vatAmount = calculateVatAmount(clientInvoice);
 			VatInformationTexts vatVatInformationTexts = createVatInformationText(clientInvoice.client(), supplier);
 
-			Commission commission = calculateCommission(clientInvoice.netPrice(), clientInvoice.commissionRate(), calculateCommissionVatRate(supplier.countryCode()));
+			log.info("Calculating commission with net amount: {}, commission rate: {}, supplier country code: {}",
+					clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
+			Commission commission = calculateCommission(clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
 
 			BigDecimal amountDue = calculateAmountDue(clientInvoice, commission);
 			return new SupplierInvoice(clientInvoice.supplierId(),
@@ -88,80 +90,6 @@ public class SupplierInvoiceService {
 			vatAmount = vatAmount.add(vat);
 		}
 		return vatAmount.setScale(2, RoundingMode.HALF_UP);
-	}
-
-	private static VatInformationTexts createVatInformationText(Client client, Supplier supplier) {
-
-		String EU_INFORMATION_EN = "Reverse charge: General rule for services in accordance with Article 44 and 196, Council Directive 2006/112/EC";
-		String EU_INFORMATION_SE = "För denna del av fakturan gäller omvänd betalningsskyldighet i enlighet med"
-				+ " artikel 44 och artikel 196 i mervärdesskattedirektivet (2006/112/EG)";
-		String FOREIGN_INFORMATION_EN = "Outside-Community supply: General rule for services in accordance with Article 44, Council Directive 2006/112/EC";
-		String FOREIGN_INFORMATION_SE = "Omsättning utanför EU, svensk moms utgår inte enligt 6 kap. 34 § ML (2023:200)";
-
-		if (client.countryCode().equals("SE")) {
-			if (EU_COUNTRY_CODES.contains(supplier.countryCode())) {
-				return new VatInformationTexts(Optional.of(EU_INFORMATION_EN),
-						Optional.of(EU_INFORMATION_EN));
-			}
-
-			if (!supplier.countryCode().equals("SE")) {
-				return new VatInformationTexts(Optional.of(FOREIGN_INFORMATION_EN),
-						Optional.of(FOREIGN_INFORMATION_EN));
-			}
-
-			return new VatInformationTexts(Optional.empty(),
-					Optional.empty());
-
-		}
-
-		if (EU_COUNTRY_CODES.contains(client.countryCode())) {
-			if (supplier.countryCode().equals("SE")) {
-				return new VatInformationTexts(Optional.of(EU_INFORMATION_SE),
-						Optional.empty());
-			}
-
-			if (EU_COUNTRY_CODES.contains(supplier.countryCode())) {
-				return new VatInformationTexts(Optional.of(EU_INFORMATION_EN),
-						Optional.of(EU_INFORMATION_EN));
-			}
-
-			return new VatInformationTexts(Optional.of(FOREIGN_INFORMATION_EN),
-					Optional.of(FOREIGN_INFORMATION_EN));
-		}
-
-		if (supplier.countryCode().equals("SE")) {
-			return new VatInformationTexts(Optional.of(FOREIGN_INFORMATION_SE),
-					Optional.empty());
-		}
-
-		if (EU_COUNTRY_CODES.contains(supplier.countryCode())) {
-			return new VatInformationTexts(Optional.of(FOREIGN_INFORMATION_EN),
-					Optional.of(EU_INFORMATION_EN));
-		}
-
-		return new VatInformationTexts(Optional.of(FOREIGN_INFORMATION_EN),
-				Optional.of(FOREIGN_INFORMATION_EN));
-	}
-
-	public Commission calculateCommission(BigDecimal clientInvoiceNetAmount, BigDecimal commissionRate, BigDecimal commissionVatRate) {
-		log.info("Calculating commission for net amount: {}, commission rate: {}, vat rate: {}", clientInvoiceNetAmount, commissionRate, commissionVatRate);
-		BigDecimal netCommission = clientInvoiceNetAmount.multiply(commissionRate).setScale(2, RoundingMode.HALF_UP);
-
-		BigDecimal commissionVatAmount = netCommission.multiply(commissionVatRate).setScale(2, RoundingMode.HALF_UP);
-
-		BigDecimal grossCommission = netCommission.add(commissionVatAmount).setScale(2, RoundingMode.HALF_UP);
-
-		Optional<BigDecimal> commissionRoundingAmount = BigDecimalUtil.extractDecimalPartIfNotZero(grossCommission);
-
-		return new Commission(netCommission, grossCommission, commissionVatRate, commissionVatAmount, commissionRate, commissionRoundingAmount);
-	}
-
-	private static BigDecimal calculateCommissionVatRate(String supplierCountryCode) {
-		if (supplierCountryCode.equals("SE")) {
-			return BigDecimal.valueOf(0.25);
-		} else {
-			return BigDecimal.ZERO;
-		}
 	}
 
 	private static BigDecimal calculateAmountDue(ClientInvoice clientInvoice, Commission commission) {

@@ -8,7 +8,6 @@ import domain.ClientInvoice;
 import domain.InvoiceId;
 import domain.SerialNumber;
 import domain.Supplier;
-import domain.SupplierId;
 import domain.SupplierInvoice;
 import domain.SupplierNameKey;
 import domain.User;
