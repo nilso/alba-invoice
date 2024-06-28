@@ -20,7 +20,6 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 
 import domain.Address;
-import domain.ClientInvoice;
 import domain.InvoiceAmounts;
 import domain.PaymentMethod;
 import domain.SupplierInvoice;
@@ -40,7 +39,7 @@ public class PdfCreator {
 
 	public SupplierInvoiceRequest.File createPdf(SupplierInvoice supplierInvoice, LocalDate now) {
 		String file;
-		SETemplate = supplierInvoice.supplierCountryCode().equals("SE");
+		SETemplate = supplierInvoice.supplierInfo().countryCode().equals("SE");
 
 		if (SETemplate) {
 			file = Objects.requireNonNull(this.getClass().getClassLoader().getResource(SE_TEMPLATE)).getFile();
@@ -51,7 +50,7 @@ public class PdfCreator {
 		try (PDDocument document = PDDocument.load(new File(file))) {
 			PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 			if (acroForm != null) {
-				writesupplierSection(acroForm, supplierInvoice);
+				writeSupplierSection(acroForm, supplierInvoice);
 				writeInvoiceSection(acroForm, supplierInvoice);
 				writeSummarySection(acroForm, supplierInvoice);
 				writeRows(acroForm, supplierInvoice);
@@ -64,9 +63,9 @@ public class PdfCreator {
 			String fileName;
 
 			if (SETemplate) {
-				fileName = "Självfaktura " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierReference() + FILE_SUFFIX;
+				fileName = "Självfaktura " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierInfo().reference() + FILE_SUFFIX;
 			} else {
-				fileName = "Self-billing invoice " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierReference() + FILE_SUFFIX;
+				fileName = "Self-billing invoice " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierInfo().reference() + FILE_SUFFIX;
 			}
 
 			String directory = homeDir + "/Documents/" + dateString;
@@ -83,10 +82,11 @@ public class PdfCreator {
 		}
 	}
 
-	private static void writesupplierSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
-		Address address = supplierInvoice.supplierAddress();
+	private static void writeSupplierSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
+		SupplierInvoice.SupplierInfo supplierInfo = supplierInvoice.supplierInfo();
+		Address address = supplierInfo.address();
 		PDField supplierNameField = acroForm.getField("f_supplierName");
-		supplierNameField.setValue(supplierInvoice.supplierName());
+		supplierNameField.setValue(supplierInfo.name());
 
 		PDField supplierAddress1Field = acroForm.getField("f_supplierAddress1");
 		supplierAddress1Field.setValue(address.address1());
@@ -95,13 +95,13 @@ public class PdfCreator {
 		supplierPostalField.setValue(address.zipCode() + " " + address.state());
 
 		PDField supplierReference = acroForm.getField("f_supplierReference");
-		supplierReference.setValue(supplierInvoice.supplierReference());
+		supplierReference.setValue(supplierInfo.reference());
 
 		PDField agentName = acroForm.getField("f_agentName");
 		agentName.setValue(supplierInvoice.agent().name());
 
 		PDField supplierVatNr = acroForm.getField("f_supplierVatNr");
-		supplierVatNr.setValue(supplierInvoice.supplierVatNr());
+		supplierVatNr.setValue(supplierInfo.vatNr());
 
 	}
 
@@ -214,7 +214,7 @@ public class PdfCreator {
 	}
 
 	private static void writeRows(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
-		ClientInvoice clientInvoice = supplierInvoice.clientInvoice();
+		SupplierInvoice.ClientInfo clientInfo = supplierInvoice.clientInfo();
 		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
 		AtomicInteger rowNo = new AtomicInteger();
 		invoiceAmounts.productRows().forEach(productRow -> {
@@ -260,9 +260,9 @@ public class PdfCreator {
 			}
 
 			PDField clientNameField = acroForm.getField("f_clientName");
-			clientNameField.setValue(clientInvoice.client().name());
+			clientNameField.setValue(clientInfo.name());
 
-			Address address = clientInvoice.invoiceAddress();
+			Address address = clientInfo.invoiceAddress();
 			PDField clientAddress1Field = acroForm.getField("f_clientAddress1");
 			clientAddress1Field.setValue(address.address1());
 
@@ -273,26 +273,26 @@ public class PdfCreator {
 			clientPostalField.setValue(address.zipCode() + " " + address.state());
 
 			PDField clientIdentificationNumberField = acroForm.getField("f_clientIdentificationNumber");
-			if (clientInvoice.client().countryCode().equals("SE")) {
+			if (clientInfo.countryCode().equals("SE")) {
 				if (SETemplate) {
-					clientIdentificationNumberField.setValue("Org.nr: " + clientInvoice.client().orgNo());
+					clientIdentificationNumberField.setValue("Org.nr: " + clientInfo.orgNo());
 				} else {
-					clientIdentificationNumberField.setValue("Registration.no: " + clientInvoice.client().orgNo());
+					clientIdentificationNumberField.setValue("Registration.no: " + clientInfo.orgNo());
 				}
 			} else {
 				if (SETemplate) {
-					clientIdentificationNumberField.setValue("Vat.nr: " + clientInvoice.client().vatNumber());
+					clientIdentificationNumberField.setValue("Vat.nr: " + clientInfo.vatNumber());
 				} else {
-					clientIdentificationNumberField.setValue("Vat.no: " + clientInvoice.client().vatNumber());
+					clientIdentificationNumberField.setValue("Vat.no: " + clientInfo.vatNumber());
 				}
 
 			}
 
 			PDField clientInvoiceNumberField = acroForm.getField("f_clientInvoiceNumber");
 			if (SETemplate) {
-				clientInvoiceNumberField.setValue("Fakturareferens Albatros: " + clientInvoice.invoiceNr());
+				clientInvoiceNumberField.setValue("Fakturareferens Albatros: " + clientInfo.invoiceNr());
 			} else {
-				clientInvoiceNumberField.setValue("Invoice reference Albatros: " + clientInvoice.invoiceNr());
+				clientInvoiceNumberField.setValue("Invoice reference Albatros: " + clientInfo.invoiceNr());
 			}
 
 			if (supplierInvoice.vatInformationTexts().clientVatInformationText().isPresent()) {

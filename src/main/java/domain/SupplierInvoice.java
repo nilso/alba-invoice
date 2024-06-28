@@ -3,22 +3,22 @@ package domain;
 import java.math.BigDecimal;
 
 public record SupplierInvoice(
-		ClientInvoice clientInvoice, //TODO would like to not pass this.
-		SupplierId supplierId,
+		ClientInfo clientInfo,
+		SupplierInfo supplierInfo,
 		String invoiceDate,
 		String dueDate,
-		String supplierName,
-		Address supplierAddress,
 		InvoiceAmounts invoiceAmounts,
-		String supplierReference,
 		User agent,
-		String supplierVatNr,
-		String supplierCountryCode,
 		String serialNumber,
 		PaymentMethod paymentMethod,
 		BigDecimal amountDue,
 		Commission commission,
 		VatInformationTexts vatInformationTexts
 ) {
+	public record ClientInfo(String name, Address invoiceAddress, String countryCode, String orgNo, String vatNumber, String invoiceNr) {
 
+	}
+
+	public record SupplierInfo(SupplierId id, String name, Address address, String reference, String vatNr, String countryCode) {
+	}
 }

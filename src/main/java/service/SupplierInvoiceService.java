@@ -50,18 +50,12 @@ public class SupplierInvoiceService {
 
 			BigDecimal amountDue = calculateAmountDue(clientInvoice, commission);
 
-			return new SupplierInvoice(
-					clientInvoice,
-					clientInvoice.supplierId(),
+			return new SupplierInvoice(mapClientInfo(clientInvoice),
+					mapSupplierInfo(supplier),
 					clientInvoice.invoiceDate(),
 					clientInvoice.dueDate(),
-					supplier.name(),
-					supplier.address(),
 					invoiceAmounts,
-					supplier.supplierReference(),
 					userMap.get(clientInvoice.id()),
-					supplier.vatNr(),
-					supplier.countryCode(),
 					newSerialNumber,
 					paymentMethod,
 					amountDue,
@@ -80,5 +74,24 @@ public class SupplierInvoiceService {
 
 	private static BigDecimal calculateAmountDue(ClientInvoice clientInvoice, Commission commission) {
 		return clientInvoice.grossPrice().subtract(commission.grossCommission().add(commission.commissionRoundingAmount().orElse(BigDecimal.ZERO).negate()));
+	}
+
+	private static SupplierInvoice.ClientInfo mapClientInfo(ClientInvoice clientInvoice) {
+		return new SupplierInvoice.ClientInfo(
+				clientInvoice.client().name(),
+				clientInvoice.invoiceAddress(),
+				clientInvoice.client().countryCode(),
+				clientInvoice.client().orgNo(),
+				clientInvoice.client().vatNumber(),
+				clientInvoice.invoiceNr());
+	}
+
+	private static SupplierInvoice.SupplierInfo mapSupplierInfo(Supplier supplier) {
+		return new SupplierInvoice.SupplierInfo(supplier.id(),
+				supplier.name(),
+				supplier.address(),
+				supplier.supplierReference(),
+				supplier.vatNr(),
+				supplier.countryCode());
 	}
 }
