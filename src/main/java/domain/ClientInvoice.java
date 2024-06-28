@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import lombok.Builder;
+
+@Builder
 public record ClientInvoice(
 		InvoiceId id,
 		Client client,

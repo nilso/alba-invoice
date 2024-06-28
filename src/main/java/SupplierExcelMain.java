@@ -22,7 +22,7 @@ public class SupplierExcelMain {
 		SupplierService supplierService = new SupplierService(supplierFacade);
 
 		try {
-			List<Supplier> allSupplier = supplierService.getAllSupplier();
+			List<Supplier> allSupplier = supplierService.getAllSuppliers();
 			excel.createExcelFile(allSupplier);
 
 		} catch (Exception e) {

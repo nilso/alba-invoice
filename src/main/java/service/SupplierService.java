@@ -91,7 +91,7 @@ public class SupplierService {
 		return sb.toString();
 	}
 
-	public List<Supplier> getAllSupplier() throws Exception {
+	public List<Supplier> getAllSuppliers() throws Exception {
 		return supplierFacade.fetchAllSuppliers().stream()
 				.map(this::mapSupplier)
 				.toList();
