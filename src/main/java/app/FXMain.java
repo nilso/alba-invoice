@@ -56,16 +56,16 @@ public class FXMain extends Application {
 		TableColumn<ClientInvoiceTableItem, String> idColumn = new TableColumn<>("Id");
 		idColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().id()));
 
-		TableColumn<ClientInvoiceTableItem, String> clientNameColumn = new TableColumn<>("ClientName");
+		TableColumn<ClientInvoiceTableItem, String> clientNameColumn = new TableColumn<>("Fakturamottagare");
 		clientNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().clientName()));
 
-		TableColumn<ClientInvoiceTableItem, String> invoiceNrColumn = new TableColumn<>("invoiceNr");
+		TableColumn<ClientInvoiceTableItem, String> invoiceNrColumn = new TableColumn<>("Fakturanummer");
 		invoiceNrColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().invoiceNr()));
 
-		TableColumn<ClientInvoiceTableItem, Number> grossPriceColumn = new TableColumn<>("grossPrice");
+		TableColumn<ClientInvoiceTableItem, Number> grossPriceColumn = new TableColumn<>("Belopp inkl. moms");
 		grossPriceColumn.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().grossPrice()));
 
-		TableColumn<ClientInvoiceTableItem, Number> commissionRateColumn = new TableColumn<>("commissionRate");
+		TableColumn<ClientInvoiceTableItem, Number> commissionRateColumn = new TableColumn<>("Agentarvode");
 		commissionRateColumn.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().commissionRate()));
 
 		table.getColumns().add(idColumn);
@@ -90,9 +90,9 @@ public class FXMain extends Application {
 	}
 
 	private TableView<ClientInvoiceTableItem> addButton(TableView<ClientInvoiceTableItem> table) {
-		TableColumn<ClientInvoiceTableItem, Void> buttonColumn = new TableColumn<>("Action");
+		TableColumn<ClientInvoiceTableItem, Void> buttonColumn = new TableColumn<>("Skapa faktura");
 		buttonColumn.setCellFactory(param -> new TableCell<>() {
-			private final Button btn = new Button("Action");
+			private final Button btn = new Button("Skapa faktura");
 
 			{
 				btn.setOnAction(event -> {
@@ -111,6 +111,10 @@ public class FXMain extends Application {
 				}
 			}
 		});
+
+//		// Set the preferred width of the column to the width of the button
+//		Button tempButton = new Button("Skapa faktura");
+//		buttonColumn.setPrefWidth(tempButton.getWidth());
 
 		table.getColumns().add(buttonColumn);
 
