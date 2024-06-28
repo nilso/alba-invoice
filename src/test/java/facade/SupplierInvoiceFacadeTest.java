@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -64,10 +65,11 @@ class SupplierInvoiceFacadeTest {
 		assertTrue(result.isEmpty());
 	}
 
-//	@Test
-//	void actuallyFetch() throws Exception {
-//		PEHttpClient realClient = new PEHttpClient();
-//		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient, new ObjectMapper());
-//		System.out.println(realFacade.fetchInvoicesOneYearBack());
-//	}
+	@Disabled
+	@Test
+	void actuallyFetch() throws Exception {
+		PEHttpClient realClient = new PEHttpClient();
+		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient, new ObjectMapper());
+		System.out.println(realFacade.fetchInvoicesOneYearBack());
+	}
 }

@@ -1,5 +1,6 @@
 package service;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import facade.ClientFacade;
@@ -13,8 +14,9 @@ class ClientInvoiceServiceTest {
 	ClientFacade clientFacade = new ClientFacade(peHttpClient);
 	ClientInvoiceService clientInvoiceService = new ClientInvoiceService(clientInvoiceFacade, clientFacade);
 
-//	@Test
-//	void testGetUnprocessedClientInvoices() throws Exception {
-//		System.out.println(clientInvoiceService.getUnprocessedClientInvoices());
-//	}
+	@Disabled
+	@Test
+	void testGetUnprocessedClientInvoices() throws Exception {
+		System.out.println(clientInvoiceService.getUnprocessedClientInvoices());
+	}
 }

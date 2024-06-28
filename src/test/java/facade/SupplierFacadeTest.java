@@ -2,6 +2,7 @@ package facade;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import domain.SupplierId;
@@ -13,10 +14,11 @@ class SupplierFacadeTest {
 		SupplierFacade supplierFacade = new SupplierFacade(new PEHttpClient());
 		assertDoesNotThrow(supplierFacade::fetchAllSuppliers);
 	}
-//
-//	@Test
-//	void fetchSupplierById() {
-//		SupplierFacade supplierFacade = new SupplierFacade(new PEHttpClient());
-//		assertDoesNotThrow(() -> supplierFacade.fetchSupplier(new SupplierId(324059)));
-//	}
+
+	@Disabled
+	@Test
+	void fetchSupplierById() {
+		SupplierFacade supplierFacade = new SupplierFacade(new PEHttpClient());
+		assertDoesNotThrow(() -> supplierFacade.fetchSupplier(new SupplierId(324059)));
+	}
 }
