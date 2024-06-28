@@ -21,6 +21,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 
 import domain.Address;
 import domain.ClientInvoice;
+import domain.InvoiceAmounts;
 import domain.PaymentMethod;
 import domain.SupplierInvoice;
 import domain.SupplierInvoiceRequest;
@@ -72,21 +73,6 @@ public class PdfCreator {
 		}
 	}
 
-	public static int[] convertPdfToIntArray(PDDocument document) throws IOException {
-		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-			document.save(byteArrayOutputStream);
-			return convertByteArrayToIntArray(byteArrayOutputStream.toByteArray());
-		}
-	}
-
-	public static int[] convertByteArrayToIntArray(byte[] byteArray) {
-		int[] intArray = new int[byteArray.length];
-		for (int i = 0; i < byteArray.length; i++) {
-			intArray[i] = byteArray[i] & 0xFF;  // Convert each byte to an unsigned integer
-		}
-		return intArray;
-	}
-
 	private static void writeSellerSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
 		Address address = supplierInvoice.supplierAddress();
 		PDField sellerNameField = acroForm.getField("f_sellerName");
@@ -110,13 +96,11 @@ public class PdfCreator {
 	}
 
 	private static void writeInvoiceSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
-		ClientInvoice clientInvoice = supplierInvoice.clientInvoice();
-
 		PDField invoiceDateField = acroForm.getField("f_invoiceDate");
-		invoiceDateField.setValue(clientInvoice.invoiceDate());
+		invoiceDateField.setValue(supplierInvoice.invoiceDate());
 
 		PDField dueDateField = acroForm.getField("f_dueDate");
-		dueDateField.setValue(clientInvoice.dueDate());
+		dueDateField.setValue(supplierInvoice.dueDate());
 
 		PDField serialNumberField = acroForm.getField("f_serialNumber");
 		serialNumberField.setValue(supplierInvoice.serialNumber());
@@ -140,28 +124,28 @@ public class PdfCreator {
 	}
 
 	private static void writeSummarySection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
-		ClientInvoice clientInvoice = supplierInvoice.clientInvoice();
-		String vatRateInPercent = bigDecimalToPercent(supplierInvoice.vatRate());
+		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
+		String vatRateInPercent = bigDecimalToPercent(invoiceAmounts.vatRate());
 		String commissionVatRateInPercent = bigDecimalToPercent(supplierInvoice.commission().commissionVatRate());
 		String commissionRateInPercent = bigDecimalToPercent(supplierInvoice.commission().commissionRate());
 
 		PDField priceCurrencyField = acroForm.getField("f_priceCurrency");
-		priceCurrencyField.setValue("A-pris " + supplierInvoice.clientInvoice().currency());
+		priceCurrencyField.setValue("A-pris " + invoiceAmounts.currency());
 
 		PDField vatRateField = acroForm.getField("f_vatRate");
 		vatRateField.setValue("Moms " + vatRateInPercent + "%");
 
 		PDField netPriceField = acroForm.getField("f_netPrice");
-		netPriceField.setValue(clientInvoice.netPrice().toString());
+		netPriceField.setValue(invoiceAmounts.netPrice().toString());
 
 		PDField vatField = acroForm.getField("f_vat");
-		vatField.setValue(supplierInvoice.vatAmount().toString());
+		vatField.setValue(supplierInvoice.invoiceAmounts().vatAmount().toString());
 
 		PDField grossPriceField = acroForm.getField("f_grossPrice");
-		grossPriceField.setValue(clientInvoice.grossPrice().toString());
+		grossPriceField.setValue(invoiceAmounts.grossPriceRounded().toString());
 
 		PDField commissionCurrencyField = acroForm.getField("f_commissionCurrency");
-		commissionCurrencyField.setValue("A-pris " + supplierInvoice.clientInvoice().currency());
+		commissionCurrencyField.setValue("A-pris " + invoiceAmounts.currency());
 
 		PDField commissionVatRateField = acroForm.getField("f_commissionVatRate");
 		commissionVatRateField.setValue("Moms " + commissionVatRateInPercent + "%");
@@ -192,17 +176,17 @@ public class PdfCreator {
 		}
 
 		PDField amountDueCurrencyField = acroForm.getField("f_amountDueCurrency");
-		amountDueCurrencyField.setValue(clientInvoice.currency());
+		amountDueCurrencyField.setValue(invoiceAmounts.currency());
 
 		PDField amountDueField = acroForm.getField("f_amountDue");
 		amountDueField.setValue(supplierInvoice.amountDue().toString());
 	}
 
 	private static void writeRows(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
-
 		ClientInvoice clientInvoice = supplierInvoice.clientInvoice();
+		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
 		AtomicInteger rowNo = new AtomicInteger();
-		clientInvoice.productRows().forEach(productRow -> {
+		invoiceAmounts.productRows().forEach(productRow -> {
 			try {
 				if (rowNo.get() > 3) {
 					throw new RuntimeException("Too many rows, only supports 4 rows.");
@@ -232,12 +216,12 @@ public class PdfCreator {
 
 		try {
 
-			if (clientInvoice.roundingAmount().isPresent()) {
+			if (invoiceAmounts.roundingAmount().isPresent()) {
 				PDField roundingTextField = acroForm.getField("f_productRowRoundingText");
 				roundingTextField.setValue("Öresavrundning");
 
 				PDField roundingAmountField = acroForm.getField("f_productRowRoundingAmount");
-				roundingAmountField.setValue(clientInvoice.roundingAmount().get().negate().toString());
+				roundingAmountField.setValue(invoiceAmounts.roundingAmount().get().negate().toString());
 			}
 
 			PDField supplierNameField = acroForm.getField("f_supplierName");
@@ -273,5 +257,20 @@ public class PdfCreator {
 			throw new RuntimeException(e);
 		}
 
+	}
+
+	public static int[] convertPdfToIntArray(PDDocument document) throws IOException {
+		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+			document.save(byteArrayOutputStream);
+			return convertByteArrayToIntArray(byteArrayOutputStream.toByteArray());
+		}
+	}
+
+	public static int[] convertByteArrayToIntArray(byte[] byteArray) {
+		int[] intArray = new int[byteArray.length];
+		for (int i = 0; i < byteArray.length; i++) {
+			intArray[i] = byteArray[i] & 0xFF;  // Convert each byte to an unsigned integer
+		}
+		return intArray;
 	}
 }

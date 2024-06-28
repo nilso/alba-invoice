@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import config.Config;
+import domain.InvoiceAmounts;
 import domain.SupplierId;
 import domain.SupplierInvoice;
 import domain.SupplierInvoiceRequest;
@@ -64,19 +65,19 @@ public class SupplierInvoiceFacade {
 	}
 
 	private SupplierInvoiceRequest mapSupplierInvoiceRequest(SupplierInvoice supplierInvoice, SupplierInvoiceRequest.File file) {
-
+		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
 		DepositAccount depositAccount = mapDepositAccount(supplierInvoice);
 		return new SupplierInvoiceRequest(supplierInvoice.serialNumber(),
 				new SupplierInvoiceRequest.Id(Integer.parseInt(supplierInvoice.supplierId().getId())),
-				new SupplierInvoiceRequest.Id(92446),
+				new SupplierInvoiceRequest.Id(92446), //TODO
 				supplierInvoice.agent().name(),
 				depositAccount,
-				supplierInvoice.clientInvoice().invoiceDate(),
-				supplierInvoice.clientInvoice().dueDate(),
-				supplierInvoice.clientInvoice().dueDate(), //TODO paymentdate needed?!
+				supplierInvoice.invoiceDate(),
+				supplierInvoice.dueDate(),
+				supplierInvoice.dueDate(), //TODO paymentdate needed?!
 				bigDecimalToBigInteger(supplierInvoice.amountDue()),
-				bigDecimalToBigInteger(supplierInvoice.vatAmount()),
-				supplierInvoice.clientInvoice().currency(),
+				bigDecimalToBigInteger(invoiceAmounts.vatAmount()),
+				invoiceAmounts.currency(),
 				new BigInteger("1"), //TODO exchange rate needed?!
 				supplierInvoice.serialNumber(),
 				"", //TODO po-nr needed?!
@@ -100,9 +101,10 @@ public class SupplierInvoiceFacade {
 	}
 
 	private SupplierInvoiceRequest.Accounts mapAccountingAccounts(SupplierInvoice supplierInvoice) {
-		BigDecimal netPrice = supplierInvoice.amountDue().subtract(supplierInvoice.vatAmount());
+		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
+		BigDecimal netPrice = supplierInvoice.amountDue().subtract(invoiceAmounts.vatAmount());
 		return new SupplierInvoiceRequest.Accounts(List.of(new SupplierInvoiceRequest.AccountingAccount(2440, bigDecimalToBigInteger(supplierInvoice.amountDue()).negate()),
-				new SupplierInvoiceRequest.AccountingAccount(2641, bigDecimalToBigInteger(supplierInvoice.vatAmount())),
+				new SupplierInvoiceRequest.AccountingAccount(2641, bigDecimalToBigInteger(invoiceAmounts.vatAmount())),
 				new SupplierInvoiceRequest.AccountingAccount(5410, bigDecimalToBigInteger(netPrice))));
 	}
 }
