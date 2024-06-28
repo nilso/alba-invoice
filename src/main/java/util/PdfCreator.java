@@ -30,8 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PdfCreator {
 	private static final String FILE_SUFFIX = ".pdf";
+	static boolean SETemplate = true;
 	String SE_TEMPLATE = "selfinvoice_template_SE.pdf";
-	String EN_TEMPLATE = "selfinvoice_template_SE.pdf"; //TODO need english template
+	String EN_TEMPLATE = "selfinvoice_template_EN.pdf";
 
 	public PdfCreator() {
 
@@ -39,7 +40,9 @@ public class PdfCreator {
 
 	public SupplierInvoiceRequest.File createPdf(SupplierInvoice supplierInvoice, LocalDate now) {
 		String file;
-		if (supplierInvoice.supplierCountryCode().equals("SE")) {
+		SETemplate = supplierInvoice.supplierCountryCode().equals("SE");
+
+		if (SETemplate) {
 			file = Objects.requireNonNull(this.getClass().getClassLoader().getResource(SE_TEMPLATE)).getFile();
 		} else {
 			file = Objects.requireNonNull(this.getClass().getClassLoader().getResource(EN_TEMPLATE)).getFile();
@@ -48,7 +51,7 @@ public class PdfCreator {
 		try (PDDocument document = PDDocument.load(new File(file))) {
 			PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 			if (acroForm != null) {
-				writeSellerSection(acroForm, supplierInvoice);
+				writesupplierSection(acroForm, supplierInvoice);
 				writeInvoiceSection(acroForm, supplierInvoice);
 				writeSummarySection(acroForm, supplierInvoice);
 				writeRows(acroForm, supplierInvoice);
@@ -73,25 +76,25 @@ public class PdfCreator {
 		}
 	}
 
-	private static void writeSellerSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
+	private static void writesupplierSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
 		Address address = supplierInvoice.supplierAddress();
-		PDField sellerNameField = acroForm.getField("f_sellerName");
-		sellerNameField.setValue(supplierInvoice.supplierName());
+		PDField supplierNameField = acroForm.getField("f_supplierName");
+		supplierNameField.setValue(supplierInvoice.supplierName());
 
-		PDField sellerAddress1Field = acroForm.getField("f_sellerAddress1");
-		sellerAddress1Field.setValue(address.address1());
+		PDField supplierAddress1Field = acroForm.getField("f_supplierAddress1");
+		supplierAddress1Field.setValue(address.address1());
 
-		PDField sellerPostalField = acroForm.getField("f_sellerPostal");
-		sellerPostalField.setValue(address.zipCode() + " " + address.state());
+		PDField supplierPostalField = acroForm.getField("f_supplierPostal");
+		supplierPostalField.setValue(address.zipCode() + " " + address.state());
 
-		PDField sellerReference = acroForm.getField("f_sellerReference");
-		sellerReference.setValue(supplierInvoice.supplierReference());
+		PDField supplierReference = acroForm.getField("f_supplierReference");
+		supplierReference.setValue(supplierInvoice.supplierReference());
 
 		PDField agentName = acroForm.getField("f_agentName");
 		agentName.setValue(supplierInvoice.agent().name());
 
-		PDField sellerVatNr = acroForm.getField("f_sellerVatNr");
-		sellerVatNr.setValue(supplierInvoice.supplierVatNr());
+		PDField supplierVatNr = acroForm.getField("f_supplierVatNr");
+		supplierVatNr.setValue(supplierInvoice.supplierVatNr());
 
 	}
 
@@ -131,9 +134,18 @@ public class PdfCreator {
 
 		PDField priceCurrencyField = acroForm.getField("f_priceCurrency");
 		priceCurrencyField.setValue("A-pris " + invoiceAmounts.currency());
+		if (SETemplate) {
+			priceCurrencyField.setValue("A-pris " + invoiceAmounts.currency());
+		} else {
+			priceCurrencyField.setValue("Price " + invoiceAmounts.currency());
+		}
 
 		PDField vatRateField = acroForm.getField("f_vatRate");
-		vatRateField.setValue("Moms " + vatRateInPercent + "%");
+		if (SETemplate) {
+			vatRateField.setValue("Moms " + vatRateInPercent + "%");
+		} else {
+			vatRateField.setValue("VAT " + vatRateInPercent + "%");
+		}
 
 		PDField netPriceField = acroForm.getField("f_netPrice");
 		netPriceField.setValue(invoiceAmounts.netPrice().toString());
@@ -145,10 +157,18 @@ public class PdfCreator {
 		grossPriceField.setValue(invoiceAmounts.grossPriceRounded().toString());
 
 		PDField commissionCurrencyField = acroForm.getField("f_commissionCurrency");
-		commissionCurrencyField.setValue("A-pris " + invoiceAmounts.currency());
+		if (SETemplate) {
+			commissionCurrencyField.setValue("A-pris " + invoiceAmounts.currency());
+		} else {
+			commissionCurrencyField.setValue("Price " + invoiceAmounts.currency());
+		}
 
 		PDField commissionVatRateField = acroForm.getField("f_commissionVatRate");
-		commissionVatRateField.setValue("Moms " + commissionVatRateInPercent + "%");
+		if (SETemplate) {
+			commissionVatRateField.setValue("Moms " + commissionVatRateInPercent + "%");
+		} else {
+			commissionVatRateField.setValue("VAT " + commissionVatRateInPercent + "%");
+		}
 
 		PDField commissionRateField = acroForm.getField("f_commissionRate");
 		commissionRateField.setValue(commissionRateInPercent + "%");
@@ -164,7 +184,11 @@ public class PdfCreator {
 
 		if (supplierInvoice.commission().commissionRoundingAmount().isPresent()) {
 			PDField commissionRoundingTextField = acroForm.getField("f_commissionRoundingText");
-			commissionRoundingTextField.setValue("Öresavrundning");
+			if (SETemplate) {
+				commissionRoundingTextField.setValue("Öresavrundning");
+			} else {
+				commissionRoundingTextField.setValue("Rounding");
+			}
 
 			PDField commissionRoundingAmountField = acroForm.getField("f_commissionRoundingAmount");
 			commissionRoundingAmountField.setValue(supplierInvoice.commission().commissionRoundingAmount().get().toString());
@@ -218,34 +242,51 @@ public class PdfCreator {
 
 			if (invoiceAmounts.roundingAmount().isPresent()) {
 				PDField roundingTextField = acroForm.getField("f_productRowRoundingText");
-				roundingTextField.setValue("Öresavrundning");
+				if (SETemplate) {
+					roundingTextField.setValue("Öresavrundning");
+				} else {
+					roundingTextField.setValue("Rounding");
+				}
 
 				PDField roundingAmountField = acroForm.getField("f_productRowRoundingAmount");
 				roundingAmountField.setValue(invoiceAmounts.roundingAmount().get().negate().toString());
 			}
 
-			PDField supplierNameField = acroForm.getField("f_supplierName");
-			supplierNameField.setValue(clientInvoice.client().name());
+			PDField clientNameField = acroForm.getField("f_clientName");
+			clientNameField.setValue(clientInvoice.client().name());
 
 			Address address = clientInvoice.invoiceAddress();
-			PDField supplierAddress1Field = acroForm.getField("f_supplierAddress1");
-			supplierAddress1Field.setValue(address.address1());
+			PDField clientAddress1Field = acroForm.getField("f_clientAddress1");
+			clientAddress1Field.setValue(address.address1());
 
-			PDField supplierAddress2Field = acroForm.getField("f_supplierAddress2");
-			supplierAddress2Field.setValue(address.address2());
+			PDField clientAddress2Field = acroForm.getField("f_clientAddress2");
+			clientAddress2Field.setValue(address.address2());
 
-			PDField supplierPostalField = acroForm.getField("f_supplierPostal");
-			supplierPostalField.setValue(address.zipCode() + " " + address.state());
+			PDField clientPostalField = acroForm.getField("f_clientPostal");
+			clientPostalField.setValue(address.zipCode() + " " + address.state());
 
-			PDField supplierIdentificationNumberField = acroForm.getField("f_supplierIdentificationNumber");
+			PDField clientIdentificationNumberField = acroForm.getField("f_clientIdentificationNumber");
 			if (clientInvoice.client().countryCode().equals("SE")) {
-				supplierIdentificationNumberField.setValue("Org.nr: " + clientInvoice.client().orgNo());
+				if (SETemplate) {
+					clientIdentificationNumberField.setValue("Org.nr: " + clientInvoice.client().orgNo());
+				} else {
+					clientIdentificationNumberField.setValue("Registration.no: " + clientInvoice.client().orgNo());
+				}
 			} else {
-				supplierIdentificationNumberField.setValue("Vat.nr: " + clientInvoice.client().vatNumber());
+				if (SETemplate) {
+					clientIdentificationNumberField.setValue("Vat.nr: " + clientInvoice.client().vatNumber());
+				} else {
+					clientIdentificationNumberField.setValue("Vat.no: " + clientInvoice.client().vatNumber());
+				}
+
 			}
 
 			PDField clientInvoiceNumberField = acroForm.getField("f_clientInvoiceNumber");
-			clientInvoiceNumberField.setValue("Fakturareferens Albatros: " + clientInvoice.invoiceNr());
+			if (SETemplate) {
+				clientInvoiceNumberField.setValue("Fakturareferens Albatros: " + clientInvoice.invoiceNr());
+			} else {
+				clientInvoiceNumberField.setValue("Invoice reference Albatros: " + clientInvoice.invoiceNr());
+			}
 
 			if (supplierInvoice.vatInformationTexts().clientVatInformationText().isPresent()) {
 				PDField vatInformationTextField = acroForm.getField("f_vatInformationText");

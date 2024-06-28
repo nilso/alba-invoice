@@ -8,11 +8,11 @@ import domain.SupplierId;
 
 class SupplierFacadeTest {
 
-//	@Test
-//	void fetchAllSuppliers() {
-//		SupplierFacade supplierFacade = new SupplierFacade(new PEHttpClient());
-//		assertDoesNotThrow(supplierFacade::fetchAllSuppliers);
-//	}
+	@Test
+	void fetchAllSuppliers() {
+		SupplierFacade supplierFacade = new SupplierFacade(new PEHttpClient());
+		assertDoesNotThrow(supplierFacade::fetchAllSuppliers);
+	}
 //
 //	@Test
 //	void fetchSupplierById() {
