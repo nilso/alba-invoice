@@ -61,7 +61,14 @@ public class PdfCreator {
 
 			String dateString = now.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "/";
 			String homeDir = System.getProperty("user.home");
-			String fileName = "Självfaktura " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierReference() + FILE_SUFFIX;
+			String fileName;
+
+			if (SETemplate) {
+				fileName = "Självfaktura " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierReference() + FILE_SUFFIX;
+			} else {
+				fileName = "Self-billing invoice " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierReference() + FILE_SUFFIX;
+			}
+
 			String directory = homeDir + "/Documents/" + dateString;
 			String filePath = directory + fileName;
 			Path path = Paths.get(directory);
