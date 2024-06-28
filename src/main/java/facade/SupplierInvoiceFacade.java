@@ -68,7 +68,7 @@ public class SupplierInvoiceFacade {
 		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
 		DepositAccount depositAccount = mapDepositAccount(supplierInvoice);
 		return new SupplierInvoiceRequest(supplierInvoice.serialNumber(),
-				new SupplierInvoiceRequest.Id(Integer.parseInt(supplierInvoice.supplierId().getId())),
+				new SupplierInvoiceRequest.Id(Integer.parseInt(supplierInvoice.supplierInfo().id().getId())),
 				new SupplierInvoiceRequest.Id(92446), //TODO
 				supplierInvoice.agent().name(),
 				depositAccount,
