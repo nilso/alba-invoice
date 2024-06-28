@@ -32,7 +32,6 @@ public class SendInvoicesToPeMain {
 	public static void main(String[] args) {
 		//Util
 		PEHttpClient peHttpClient = new PEHttpClient();
-		SupplierInvoiceExcel supplierInvoiceExcel = new SupplierInvoiceExcel();
 		PdfCreator pdfCreator = new PdfCreator();
 
 		//Facade

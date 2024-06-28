@@ -86,6 +86,7 @@ public class SupplierInvoiceFacade {
 	}
 
 	private DepositAccount mapDepositAccount(SupplierInvoice supplierInvoice) {
+		//TODO need to handle foreign accounts
 		return switch (supplierInvoice.paymentMethod().name()) {
 			case "Bankkonto" -> new DepositAccount("BANK_ACCOUNT", supplierInvoice.paymentMethod().number());
 			case "Plusgiro" -> new DepositAccount("PLUS_GIRO", supplierInvoice.paymentMethod().number());
