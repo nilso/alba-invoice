@@ -94,6 +94,16 @@
 			<artifactId>log4j-to-slf4j</artifactId>
 			<version>2.17.2</version>
 		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>21</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-fxml</artifactId>
+			<version>21</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -105,6 +115,14 @@
 				<configuration>
 					<source>21</source>
 					<target>21</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.openjfx</groupId>
+				<artifactId>javafx-maven-plugin</artifactId>
+				<version>0.0.8</version>
+				<configuration>
+					<mainClass>FXMain</mainClass>
 				</configuration>
 			</plugin>
 			<plugin>

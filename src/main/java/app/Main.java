@@ -1,3 +1,5 @@
+package app;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +11,6 @@ import domain.InvoiceId;
 import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierInvoice;
-import domain.SupplierInvoiceRequest;
 import domain.SupplierNameKey;
 import domain.User;
 import facade.ClientFacade;
@@ -26,7 +27,7 @@ import service.UserService;
 import util.PdfCreator;
 
 @Slf4j
-public class SendInvoicesToPeMain {
+public class Main {
 	public static void main(String[] args) {
 		//Util
 		PEHttpClient peHttpClient = new PEHttpClient();
@@ -58,14 +59,9 @@ public class SendInvoicesToPeMain {
 					supplierMap,
 					userMap);
 
-			supplierInvoices.forEach(supplierInvoice -> {
-				SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice, now);
-				try {
-					supplierInvoiceFacade.sendInvoiceToPE(supplierInvoice, file);
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			});
+			supplierInvoices.forEach(supplierInvoice -> pdfCreator.createPdf(supplierInvoice, now));
+			//			supplierInvoiceExcel.createExcelFile(clientInvoices, userMap, newSerialNumbers, supplierMap);
+
 		} catch (Exception e) {
 			log.error("Failed to fetch invoices", e);
 		}
