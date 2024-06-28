@@ -41,21 +41,22 @@ public class SupplierInvoiceService {
 			Supplier supplier = supplierMap.get(clientInvoice.id());
 			String newSerialNumber = createSerialNumber(currentSerialNumbers, supplier.name());
 			PaymentMethod paymentMethod = supplier.paymentMethod();
-			String supplierCountryCode = supplier.countryCode();
+
 			BigDecimal vatRate = calculateVatRate(clientInvoice);
 			BigDecimal vatAmount = calculateVatAmount(clientInvoice);
-			Commission commission = createCommission(clientInvoice.netPrice(), clientInvoice.commissionRate(), calculateCommissionVatRate(supplierCountryCode));
 			VatInformationTexts vatVatInformationTexts = createVatInformationText(clientInvoice.client(), supplier);
-			log.info("calculating amountDue with grossPrice: {}, commission: {}, commissionRoundingAmount: {}", clientInvoice.grossPrice(), commission.grossCommission(), commission.commissionRoundingAmount().orElse(BigDecimal.ZERO));
-			BigDecimal amountDue = clientInvoice.grossPrice().subtract(commission.grossCommission().add(commission.commissionRoundingAmount().orElse(BigDecimal.ZERO).negate()));
+
+			Commission commission = calculateCommission(clientInvoice.netPrice(), clientInvoice.commissionRate(), calculateCommissionVatRate(supplier.countryCode()));
+
+			BigDecimal amountDue = calculateAmountDue(clientInvoice, commission);
 			return new SupplierInvoice(clientInvoice.supplierId(),
 					supplier.name(),
 					supplier.address(),
 					clientInvoice,
 					supplier.supplierReference(),
-					userMap.get(clientInvoice.id()).name(),
+					userMap.get(clientInvoice.id()),
 					supplier.vatNr(),
-					supplierCountryCode,
+					supplier.countryCode(),
 					newSerialNumber,
 					paymentMethod,
 					vatRate,
@@ -64,7 +65,6 @@ public class SupplierInvoiceService {
 					commission,
 					vatVatInformationTexts);
 		}).toList();
-
 	}
 
 	private static String createSerialNumber(Map<SupplierNameKey, SerialNumber> currentSerialNumbers, String supplierName) {
@@ -88,27 +88,6 @@ public class SupplierInvoiceService {
 			vatAmount = vatAmount.add(vat);
 		}
 		return vatAmount.setScale(2, RoundingMode.HALF_UP);
-	}
-
-	public Commission createCommission(BigDecimal clientInvoiceNetAmount, BigDecimal commissionRate, BigDecimal commissionVatRate) {
-		log.info("Calculating commission for net amount: {}, commission rate: {}, vat rate: {}", clientInvoiceNetAmount, commissionRate, commissionVatRate);
-		BigDecimal netCommission = clientInvoiceNetAmount.multiply(commissionRate).setScale(2, RoundingMode.HALF_UP);
-
-		BigDecimal commissionVatAmount = netCommission.multiply(commissionVatRate).setScale(2, RoundingMode.HALF_UP);
-
-		BigDecimal grossCommission = netCommission.add(commissionVatAmount).setScale(2, RoundingMode.HALF_UP);
-
-		Optional<BigDecimal> commissionRoundingAmount = BigDecimalUtil.extractDecimalPartIfNotZero(grossCommission);
-
-		return new Commission(netCommission, grossCommission, commissionVatRate, commissionVatAmount, commissionRate, commissionRoundingAmount);
-	}
-
-	private static BigDecimal calculateCommissionVatRate(String supplierCountryCode) {
-		if (supplierCountryCode.equals("SE")) {
-			return BigDecimal.valueOf(0.25);
-		} else {
-			return BigDecimal.ZERO;
-		}
 	}
 
 	private static VatInformationTexts createVatInformationText(Client client, Supplier supplier) {
@@ -162,5 +141,30 @@ public class SupplierInvoiceService {
 
 		return new VatInformationTexts(Optional.of(FOREIGN_INFORMATION_EN),
 				Optional.of(FOREIGN_INFORMATION_EN));
+	}
+
+	public Commission calculateCommission(BigDecimal clientInvoiceNetAmount, BigDecimal commissionRate, BigDecimal commissionVatRate) {
+		log.info("Calculating commission for net amount: {}, commission rate: {}, vat rate: {}", clientInvoiceNetAmount, commissionRate, commissionVatRate);
+		BigDecimal netCommission = clientInvoiceNetAmount.multiply(commissionRate).setScale(2, RoundingMode.HALF_UP);
+
+		BigDecimal commissionVatAmount = netCommission.multiply(commissionVatRate).setScale(2, RoundingMode.HALF_UP);
+
+		BigDecimal grossCommission = netCommission.add(commissionVatAmount).setScale(2, RoundingMode.HALF_UP);
+
+		Optional<BigDecimal> commissionRoundingAmount = BigDecimalUtil.extractDecimalPartIfNotZero(grossCommission);
+
+		return new Commission(netCommission, grossCommission, commissionVatRate, commissionVatAmount, commissionRate, commissionRoundingAmount);
+	}
+
+	private static BigDecimal calculateCommissionVatRate(String supplierCountryCode) {
+		if (supplierCountryCode.equals("SE")) {
+			return BigDecimal.valueOf(0.25);
+		} else {
+			return BigDecimal.ZERO;
+		}
+	}
+
+	private static BigDecimal calculateAmountDue(ClientInvoice clientInvoice, Commission commission) {
+		return clientInvoice.grossPrice().subtract(commission.grossCommission().add(commission.commissionRoundingAmount().orElse(BigDecimal.ZERO).negate()));
 	}
 }

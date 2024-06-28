@@ -102,7 +102,7 @@ public class PdfCreator {
 		sellerReference.setValue(supplierInvoice.supplierReference());
 
 		PDField agentName = acroForm.getField("f_agentName");
-		agentName.setValue(supplierInvoice.agentReference());
+		agentName.setValue(supplierInvoice.agent().name());
 
 		PDField sellerVatNr = acroForm.getField("f_sellerVatNr");
 		sellerVatNr.setValue(supplierInvoice.supplierVatNr());

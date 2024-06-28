@@ -69,7 +69,7 @@ public class SupplierInvoiceFacade {
 		return new SupplierInvoiceRequest(supplierInvoice.serialNumber(),
 				new SupplierInvoiceRequest.Id(Integer.parseInt(supplierInvoice.supplierId().getId())),
 				new SupplierInvoiceRequest.Id(92446),
-				supplierInvoice.agentReference(),
+				supplierInvoice.agent().name(),
 				depositAccount,
 				supplierInvoice.clientInvoice().invoiceDate(),
 				supplierInvoice.clientInvoice().dueDate(),

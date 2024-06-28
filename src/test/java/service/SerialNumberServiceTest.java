@@ -112,7 +112,7 @@ class SerialNumberServiceTest {
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba01", 1);
 		SerialNumber expectedSerialNumber2 = new SerialNumber("alba02", 2);
-		SerialNumber expectedSerialNumber3 = new SerialNumber("alba03", 1);
+		SerialNumber expectedSerialNumber3 = new SerialNumber("alba03", 0);
 
 		Map<SupplierNameKey, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(suppliers);
 		assertEquals(expectedSerialNumber, result.get(new SupplierNameKey(supplier.name())));

@@ -64,10 +64,10 @@ class SupplierInvoiceFacadeTest {
 		assertTrue(result.isEmpty());
 	}
 
-	@Test
-	void actuallyFetch() throws Exception {
-		PEHttpClient realClient = new PEHttpClient();
-		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient, new ObjectMapper());
-		System.out.println(realFacade.fetchInvoicesOneYearBack());
-	}
+//	@Test
+//	void actuallyFetch() throws Exception {
+//		PEHttpClient realClient = new PEHttpClient();
+//		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient, new ObjectMapper());
+//		System.out.println(realFacade.fetchInvoicesOneYearBack());
+//	}
 }

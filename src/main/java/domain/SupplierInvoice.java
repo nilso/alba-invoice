@@ -8,7 +8,7 @@ public record SupplierInvoice(
 		Address supplierAddress,
 		ClientInvoice clientInvoice,
 		String supplierReference,
-		String agentReference,
+		User agent,
 		String supplierVatNr,
 		String supplierCountryCode,
 		String serialNumber,

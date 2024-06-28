@@ -1,7 +1,5 @@
 package service;
 
-import org.junit.jupiter.api.Test;
-
 import facade.PEHttpClient;
 import facade.SupplierFacade;
 
@@ -10,9 +8,9 @@ class SupplierServiceTest {
 	SupplierFacade supplierFacade = new SupplierFacade(peHttpClient);
 	SupplierService supplierService = new SupplierService(supplierFacade);
 
-	@Test
-	void test() {
-		//		supplierService.getSupplierMap()
-	}
+	//	@Test
+	//	void test() {
+	//		supplierService.getSupplierMap()
+	//	}
 
 }

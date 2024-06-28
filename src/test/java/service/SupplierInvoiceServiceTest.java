@@ -14,8 +14,8 @@ class SupplierInvoiceServiceTest {
 	private static final SupplierInvoiceService supplierInvoiceService = new SupplierInvoiceService();
 
 	@Test
-	void createCommission() {
-		Commission commission = supplierInvoiceService.createCommission(new BigDecimal("12347.67"), new BigDecimal("0.1000"), new BigDecimal("0.06"));
+	void calculateCommission() {
+		Commission commission = supplierInvoiceService.calculateCommission(new BigDecimal("12347.67"), new BigDecimal("0.1000"), new BigDecimal("0.06"));
 		assertEquals(new BigDecimal("1234.77"), commission.netCommission());
 		assertEquals(new BigDecimal("1308.86"), commission.grossCommission());
 		assertEquals(new BigDecimal("0.06"), commission.commissionVatRate());
