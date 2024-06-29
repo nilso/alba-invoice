@@ -26,12 +26,13 @@ public class SupplierInvoiceFacade {
 	private final PEHttpClient peHttpClient;
 	private final ObjectMapper objectMapper;
 
-	public SupplierInvoiceFacade(PEHttpClient peHttpClient, ObjectMapper objectMapper) {
+	public SupplierInvoiceFacade(PEHttpClient peHttpClient) {
 		this.peHttpClient = peHttpClient;
-		this.objectMapper = objectMapper;
+		this.objectMapper = new ObjectMapper();
 	}
 
 	public Map<SupplierId, List<SupplierInvoiceResponse>> fetchInvoicesOneYearBack() throws Exception {
+
 		LocalDate oneYearAgo = getOneYearBack();
 		log.info("Fetching supplier invoices one year back: {}", oneYearAgo);
 		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), oneYearAgo);

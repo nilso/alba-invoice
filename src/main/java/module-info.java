@@ -9,9 +9,14 @@ module alba.invoice {
 	requires java.net.http;
 	requires org.apache.poi.poi;
 	requires org.apache.poi.ooxml;
+	requires org.apache.pdfbox;
 
 	opens app to javafx.fxml;
 	exports app;
-	exports domain to com.fasterxml.jackson.databind;
+	exports app.domain;
 	opens domain to com.fasterxml.jackson.databind;
+	exports service;
+	exports util;
+	opens service to javafx.fxml;
+	exports domain;
 }

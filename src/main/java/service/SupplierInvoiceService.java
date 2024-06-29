@@ -31,45 +31,46 @@ public class SupplierInvoiceService {
 		supplierInvoiceCounter.clear();
 	}
 
-	public List<SupplierInvoice> createSupplierInvoices(List<ClientInvoice> clientInvoices,
-			Map<SupplierNameKey, SerialNumber> currentSerialNumbers,
-			Map<InvoiceId, Supplier> supplierMap,
-			Map<InvoiceId, User> userMap) {
-		return clientInvoices.stream().map(clientInvoice -> {
-			Supplier supplier = supplierMap.get(clientInvoice.id());
-			String newSerialNumber = createSerialNumber(currentSerialNumbers, supplier.name());
-			PaymentMethod paymentMethod = supplier.paymentMethod();
+	public SupplierInvoice createSupplierInvoice(ClientInvoice clientInvoice,
+			SerialNumber currentSerialNumber,
+			Supplier supplier,
+			User user) {
 
-			VatInformationTexts vatVatInformationTexts = createVatInformationText(clientInvoice.client(), supplier);
-
-			log.info("Calculating commission with net amount: {}, commission rate: {}, supplier country code: {}",
-					clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
-			Commission commission = calculateCommission(clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
-
-			InvoiceAmounts invoiceAmounts = calculateSupplierInvoiceAmounts(clientInvoice);
-
-			BigDecimal amountDue = calculateAmountDue(clientInvoice, commission);
-
-			return new SupplierInvoice(mapClientInfo(clientInvoice),
-					mapSupplierInfo(supplier),
-					clientInvoice.invoiceDate(),
-					clientInvoice.dueDate(),
-					invoiceAmounts,
-					userMap.get(clientInvoice.id()),
-					newSerialNumber,
-					paymentMethod,
-					amountDue,
-					commission,
-					vatVatInformationTexts);
-		}).toList();
+		String newSerialNumber = createSerialNumber(currentSerialNumber, supplier.name());
+		return mapSupplierInvoice(clientInvoice, supplier, user, newSerialNumber);
 	}
 
-	private static String createSerialNumber(Map<SupplierNameKey, SerialNumber> currentSerialNumbers, String supplierName) {
-		SupplierNameKey supplierNameKey = new SupplierNameKey(supplierName);
-		int currentSupplierInvoiceCounter = supplierInvoiceCounter.getOrDefault(supplierNameKey, 0);
-		SerialNumber newSerialNumber = currentSerialNumbers.get(supplierNameKey).incrementSuffix(1 + currentSupplierInvoiceCounter);
-		supplierInvoiceCounter.put(supplierNameKey, currentSupplierInvoiceCounter + 1);
+	private static String createSerialNumber(SerialNumber currentSerialNumber, String supplierName) {
+		int currentSupplierInvoiceCounter = supplierInvoiceCounter.getOrDefault(new SupplierNameKey(supplierName), 0);
+		SerialNumber newSerialNumber = currentSerialNumber.incrementSuffix(1 + currentSupplierInvoiceCounter);
+		supplierInvoiceCounter.put(new SupplierNameKey(supplierName), currentSupplierInvoiceCounter + 1);
 		return newSerialNumber.prefix() + "-" + newSerialNumber.suffix();
+	}
+
+	private static SupplierInvoice mapSupplierInvoice(ClientInvoice clientInvoice, Supplier supplier, User user, String newSerialNumber) {
+		PaymentMethod paymentMethod = supplier.paymentMethod();
+
+		VatInformationTexts vatVatInformationTexts = createVatInformationText(clientInvoice.client(), supplier);
+
+		log.info("Calculating commission with net amount: {}, commission rate: {}, supplier country code: {}",
+				clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
+		Commission commission = calculateCommission(clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
+
+		InvoiceAmounts invoiceAmounts = calculateSupplierInvoiceAmounts(clientInvoice);
+
+		BigDecimal amountDue = calculateAmountDue(clientInvoice, commission);
+
+		return new SupplierInvoice(mapClientInfo(clientInvoice),
+				mapSupplierInfo(supplier),
+				clientInvoice.invoiceDate(),
+				clientInvoice.dueDate(),
+				invoiceAmounts,
+				user,
+				newSerialNumber,
+				paymentMethod,
+				amountDue,
+				commission,
+				vatVatInformationTexts);
 	}
 
 	private static BigDecimal calculateAmountDue(ClientInvoice clientInvoice, Commission commission) {
@@ -93,5 +94,25 @@ public class SupplierInvoiceService {
 				supplier.supplierReference(),
 				supplier.vatNr(),
 				supplier.countryCode());
+	}
+
+	public List<SupplierInvoice> createSupplierInvoices(List<ClientInvoice> clientInvoices,
+			Map<SupplierNameKey, SerialNumber> currentSerialNumbers,
+			Map<InvoiceId, Supplier> supplierMap,
+			Map<InvoiceId, User> userMap) {
+		return clientInvoices.stream().map(clientInvoice -> {
+			User user = userMap.get(clientInvoice.id());
+			Supplier supplier = supplierMap.get(clientInvoice.id());
+			String newSerialNumber = createSerialNumber(currentSerialNumbers, supplier.name());
+			return mapSupplierInvoice(clientInvoice, supplier, user, newSerialNumber);
+		}).toList();
+	}
+
+	private static String createSerialNumber(Map<SupplierNameKey, SerialNumber> currentSerialNumbers, String supplierName) {
+		SupplierNameKey supplierNameKey = new SupplierNameKey(supplierName);
+		int currentSupplierInvoiceCounter = supplierInvoiceCounter.getOrDefault(supplierNameKey, 0);
+		SerialNumber newSerialNumber = currentSerialNumbers.get(supplierNameKey).incrementSuffix(1 + currentSupplierInvoiceCounter);
+		supplierInvoiceCounter.put(supplierNameKey, currentSupplierInvoiceCounter + 1);
+		return newSerialNumber.prefix() + "-" + newSerialNumber.suffix();
 	}
 }

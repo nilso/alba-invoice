@@ -37,7 +37,7 @@ public class PdfCreator {
 
 	}
 
-	public SupplierInvoiceRequest.File createPdf(SupplierInvoice supplierInvoice, LocalDate now) {
+	public SupplierInvoiceRequest.File createPdf(SupplierInvoice supplierInvoice) {
 		String file;
 		SETemplate = supplierInvoice.supplierInfo().countryCode().equals("SE");
 
@@ -58,7 +58,7 @@ public class PdfCreator {
 				log.info("No form fields found.");
 			}
 
-			String dateString = now.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "/";
+			String dateString = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "/";
 			String homeDir = System.getProperty("user.home");
 			String fileName;
 

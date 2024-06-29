@@ -30,7 +30,7 @@ public class Config {
 		return properties.getProperty("CLIENT_ID");
 	}
 
-	public static int getDaysBack() {
-		return Integer.parseInt(properties.getProperty("DAYS_BACK"));
+	public static int getDefaultDaysBack() {
+		return Integer.parseInt(properties.getProperty("DEFAULT_DAYS_BACK"));
 	}
 }

@@ -31,10 +31,14 @@ public class ClientInvoiceService {
 	}
 
 	public List<ClientInvoice> getUnprocessedClientInvoices() throws Exception {
-		List<ClientInvoiceResponse> clientInvoiceResponses = clientInvoiceFacade.fetchClientInvoices(Config.getDaysBack());
+		return getUnprocessedClientInvoices(Config.getDefaultDaysBack());
+	}
 
-		if (clientInvoiceResponses.isEmpty()) {
-			throw new RuntimeException("No client invoices found");
+	public List<ClientInvoice> getUnprocessedClientInvoices(int daysBack) throws Exception {
+		List<ClientInvoiceResponse> clientInvoiceResponses = clientInvoiceFacade.fetchClientInvoices(daysBack);
+
+		if (clientInvoiceResponses == null || clientInvoiceResponses.isEmpty()) {
+			return List.of();
 		}
 
 		//TODO filtrera allt som har länkar till leverantörsfakturor.
@@ -127,6 +131,13 @@ public class ClientInvoiceService {
 		return bigDecimal.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
 	}
 
+	private static BigDecimal zeroPaddedDoubleToBigDecimal(double value) {
+		return BigDecimal.valueOf(value)
+				.setScale(2, RoundingMode.HALF_UP)
+				.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
+
+	}
+
 	private static List<ProductRow> mapRows(ClientInvoiceResponse clientInvoiceResponse) {
 		return clientInvoiceResponse.rows().rows().stream()
 				.map(row -> {
@@ -143,13 +154,6 @@ public class ClientInvoiceService {
 				clientResponse.vatNumber(),
 				clientResponse.orgNo(),
 				clientResponse.countryCode());
-	}
-
-	private static BigDecimal zeroPaddedDoubleToBigDecimal(double value) {
-		return BigDecimal.valueOf(value)
-				.setScale(2, RoundingMode.HALF_UP)
-				.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
-
 	}
 
 	private static BigDecimal doubleToBigDecimal(double value) {

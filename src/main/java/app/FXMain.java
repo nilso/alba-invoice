@@ -1,45 +1,85 @@
 package app;
 
-import java.util.List;
+import static app.Table.createTable;
+import static app.Table.populateTable;
 
-import domain.ClientInvoice;
+import java.util.Map;
+
+import app.domain.ClientInvoiceTableItem;
+import domain.InvoiceId;
+import domain.UIData;
 import facade.ClientFacade;
 import facade.ClientInvoiceFacade;
 import facade.PEHttpClient;
+import facade.SupplierFacade;
+import facade.SupplierInvoiceFacade;
 import javafx.application.Application;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import service.ClientInvoiceService;
+import service.SerialNumberService;
+import service.SupplierInvoiceService;
+import service.SupplierService;
+import service.UIDataService;
+import service.UserService;
+import util.PdfCreator;
 
 @Slf4j
 public class FXMain extends Application {
+	private static final PEHttpClient peHttpClient;
+	private static final ClientInvoiceFacade clientInvoiceFacade;
+	private static final ClientFacade clientFacade;
+	private static final UserService userService;
+	private static final ClientInvoiceService clientInvoiceService;
+	private static final SupplierFacade supplierFacade;
+	private static final SupplierService supplierService;
+	private static final SerialNumberService serialNumberService;
+	private static final SupplierInvoiceFacade supplierInvoiceFacade;
+	private static final SupplierInvoiceService supplierInvoiceService;
+	private static final PdfCreator pdfCreator;
+	private static final UIDataService uiDataService;
+	private static final Header header;
+	private static final Footer footer;
+	public static Map<InvoiceId, UIData> uiData;
+
+	static {
+		peHttpClient = new PEHttpClient();
+		clientInvoiceFacade = new ClientInvoiceFacade(peHttpClient);
+		clientFacade = new ClientFacade(peHttpClient);
+		userService = new UserService(peHttpClient);
+		clientInvoiceService = new ClientInvoiceService(clientInvoiceFacade, clientFacade);
+		supplierFacade = new SupplierFacade(peHttpClient);
+		supplierService = new SupplierService(supplierFacade);
+		supplierInvoiceFacade = new SupplierInvoiceFacade(peHttpClient);
+		serialNumberService = new SerialNumberService(supplierInvoiceFacade);
+		pdfCreator = new PdfCreator();
+		supplierInvoiceService = new SupplierInvoiceService();
+		uiDataService = new UIDataService(clientInvoiceService, userService, supplierService, serialNumberService);
+		header = new Header(uiDataService);
+		footer = new Footer(supplierInvoiceService, pdfCreator);
+	}
+
 	public static void main(String[] args) {
 		launch(args);
 	}
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		PEHttpClient peHttpClient = new PEHttpClient();
-		ClientInvoiceFacade clientInvoiceFacade = new ClientInvoiceFacade(peHttpClient);
-		ClientFacade clientFacade = new ClientFacade(peHttpClient);
-		ClientInvoiceService clientInvoiceService = new ClientInvoiceService(clientInvoiceFacade, clientFacade);
 
+		uiData = uiDataService.fetchUIData();
 		TableView<ClientInvoiceTableItem> table = createTable();
 
-		List<ClientInvoice> invoices = clientInvoiceService.getUnprocessedClientInvoices();
-		invoices.stream()
-				.map(this::mapClientInvoiceTableItem)
-				.forEach(table.getItems()::add);
+		populateTable(table, uiData);
 
-		VBox vbox = new VBox(table);
+		Button createInvoiceButton = footer.addCreateInvoiceButton(table);
+
+		VBox inputField = header.getHeader(table);
+		VBox vbox = new VBox(inputField, table, createInvoiceButton);
 
 		Scene scene = new Scene(vbox);
 		primaryStage.setTitle("Alba");
@@ -48,85 +88,5 @@ public class FXMain extends Application {
 		primaryStage.show();
 	}
 
-	private TableView<ClientInvoiceTableItem> createTable() {
-		TableView<ClientInvoiceTableItem> table = new TableView<>();
 
-		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-
-		TableColumn<ClientInvoiceTableItem, String> idColumn = new TableColumn<>("Id");
-		idColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().id()));
-
-		TableColumn<ClientInvoiceTableItem, String> clientNameColumn = new TableColumn<>("Fakturamottagare");
-		clientNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().clientName()));
-
-		TableColumn<ClientInvoiceTableItem, String> invoiceNrColumn = new TableColumn<>("Fakturanummer");
-		invoiceNrColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().invoiceNr()));
-
-		TableColumn<ClientInvoiceTableItem, Number> grossPriceColumn = new TableColumn<>("Belopp inkl. moms");
-		grossPriceColumn.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().grossPrice()));
-
-		TableColumn<ClientInvoiceTableItem, Number> commissionRateColumn = new TableColumn<>("Agentarvode");
-		commissionRateColumn.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().commissionRate()));
-
-		table.getColumns().add(idColumn);
-		table.getColumns().add(clientNameColumn);
-		table.getColumns().add(invoiceNrColumn);
-		table.getColumns().add(grossPriceColumn);
-		table.getColumns().add(commissionRateColumn);
-
-		addButton(table);
-
-		return table;
-	}
-
-	private ClientInvoiceTableItem mapClientInvoiceTableItem(ClientInvoice clientInvoice) {
-		return new ClientInvoiceTableItem(
-				clientInvoice.id().getId(),
-				clientInvoice.client().name(),
-				clientInvoice.invoiceNr(),
-				clientInvoice.grossPrice().doubleValue(),
-				clientInvoice.commissionRate().doubleValue()
-		);
-	}
-
-	private TableView<ClientInvoiceTableItem> addButton(TableView<ClientInvoiceTableItem> table) {
-		TableColumn<ClientInvoiceTableItem, Void> buttonColumn = new TableColumn<>("Skapa faktura");
-		buttonColumn.setCellFactory(param -> new TableCell<>() {
-			private final Button btn = new Button("Skapa faktura");
-
-			{
-				btn.setOnAction(event -> {
-					ClientInvoiceTableItem item = getTableView().getItems().get(getIndex());
-					performAction(item);
-				});
-			}
-
-			@Override
-			protected void updateItem(Void item, boolean empty) {
-				super.updateItem(item, empty);
-				if (empty) {
-					setGraphic(null);
-				} else {
-					setGraphic(btn);
-				}
-			}
-		});
-
-//		// Set the preferred width of the column to the width of the button
-//		Button tempButton = new Button("Skapa faktura");
-//		buttonColumn.setPrefWidth(tempButton.getWidth());
-
-		table.getColumns().add(buttonColumn);
-
-		return table;
-	}
-
-	private void performAction(ClientInvoiceTableItem item) {
-		// This is the function that gets called when the button is clicked.
-		// You can put your own logic here.
-		System.out.println("Button clicked for item: " + item);
-	}
-
-	private record ClientInvoiceTableItem(String id, String clientName, String invoiceNr, double grossPrice, double commissionRate) {
-	}
 }

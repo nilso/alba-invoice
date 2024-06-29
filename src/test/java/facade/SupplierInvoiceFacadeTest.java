@@ -69,7 +69,7 @@ class SupplierInvoiceFacadeTest {
 	@Test
 	void actuallyFetch() throws Exception {
 		PEHttpClient realClient = new PEHttpClient();
-		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient, new ObjectMapper());
+		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient);
 		System.out.println(realFacade.fetchInvoicesOneYearBack());
 	}
 }
