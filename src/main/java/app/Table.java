@@ -12,9 +12,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.input.KeyCode;
+import javafx.scene.control.cell.TextFieldTableCell;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,6 +21,7 @@ public class Table {
 	public static TableView<ClientInvoiceTableItem> createTable() {
 		TableView<ClientInvoiceTableItem> table = new TableView<>();
 
+		table.setEditable(true);
 		table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
 		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
@@ -32,6 +32,11 @@ public class Table {
 
 		TableColumn<ClientInvoiceTableItem, String> clientNameColumn = new TableColumn<>("Fakturamottagare");
 		clientNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().clientName()));
+		clientNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+		clientNameColumn.setOnEditCommit(event -> {
+			ClientInvoiceTableItem item = event.getRowValue();
+			item.setClientName(event.getNewValue());
+		});
 		clientNameColumn.setMinWidth(200);
 
 		TableColumn<ClientInvoiceTableItem, String> invoiceNrColumn = new TableColumn<>("Fakturanummer");
