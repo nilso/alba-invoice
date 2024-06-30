@@ -54,7 +54,12 @@ public class SupplierInvoiceService {
 
 		log.info("Calculating commission with net amount: {}, commission rate: {}, supplier country code: {}",
 				clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
-		Commission commission = calculateCommission(clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
+
+		if (clientInvoice.commissionRate().isEmpty()) {
+			throw new IllegalArgumentException("Commission rate is missing for client invoice: " + clientInvoice.id());
+		}
+
+		Commission commission = calculateCommission(clientInvoice.netPrice(), clientInvoice.commissionRate().get(), supplier.countryCode());
 
 		InvoiceAmounts invoiceAmounts = calculateSupplierInvoiceAmounts(clientInvoice);
 

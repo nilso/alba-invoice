@@ -19,11 +19,21 @@ public class BigDecimalUtil {
 				.setScale(2, RoundingMode.FLOOR);
 	}
 
+	public static String doubleToPercent(double number) {
+		return bigDecimalToPercent(BigDecimal.valueOf(number));
+	}
+
 	public static String bigDecimalToPercent(BigDecimal number) {
 		BigDecimal result = number.multiply(new BigDecimal("100"));
 		if (result.stripTrailingZeros().scale() > 0) {
 			result = result.setScale(2, RoundingMode.HALF_UP);
 		}
 		return result.stripTrailingZeros().toPlainString();
+	}
+
+	public static double parsePercentStringToDecimal(String percentString) {
+		percentString = percentString.replace(",", ".");
+		double percentValue = Double.parseDouble(percentString);
+		return percentValue / 100;
 	}
 }

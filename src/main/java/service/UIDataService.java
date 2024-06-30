@@ -3,13 +3,14 @@ package service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import domain.UIData;
 import domain.ClientInvoice;
 import domain.InvoiceId;
 import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierNameKey;
+import domain.UIData;
 import domain.User;
 
 public class UIDataService {
@@ -42,11 +43,16 @@ public class UIDataService {
 		Map<SupplierNameKey, SerialNumber> currentSerialNumbers = serialNumberService.getCurrentSerialOrNewIfNone(supplierMap.values().stream().toList());
 
 		for (ClientInvoice clientInvoice : clientInvoices) {
+			Supplier supplier = supplierMap.get(clientInvoice.id());
+			Optional<SerialNumber> currentSerialNumber = Optional.empty();
+			if (supplier != null) {
+				currentSerialNumber = Optional.of(currentSerialNumbers.get(new SupplierNameKey(supplierMap.get(clientInvoice.id()).name())));
+			}
 			UIData data = new UIData(
 					clientInvoice,
 					userMap.get(clientInvoice.id()),
-					supplierMap.get(clientInvoice.id()),
-					currentSerialNumbers.get(new SupplierNameKey(supplierMap.get(clientInvoice.id()).name()))
+					supplier,
+					currentSerialNumber
 			);
 			uiData.put(clientInvoice.id(), data);
 		}

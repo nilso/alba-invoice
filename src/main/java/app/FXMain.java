@@ -17,7 +17,6 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +44,7 @@ public class FXMain extends Application {
 	private static final UIDataService uiDataService;
 	private static final Header header;
 	private static final Footer footer;
-	public static Map<InvoiceId, UIData> uiData;
+	public static Map<InvoiceId, UIData> uiDataMap;
 
 	static {
 		peHttpClient = new PEHttpClient();
@@ -70,11 +69,11 @@ public class FXMain extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
+		uiDataMap = uiDataService.fetchUIData();
 
-		uiData = uiDataService.fetchUIData();
 		TableView<ClientInvoiceTableItem> table = createTable();
 
-		populateTable(table, uiData);
+		populateTable(table, uiDataMap.values().stream().toList());
 
 		Button createInvoiceButton = footer.addCreateInvoiceButton(table);
 
@@ -86,7 +85,7 @@ public class FXMain extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.sizeToScene();
 		primaryStage.show();
-	}
 
+	}
 
 }

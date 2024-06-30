@@ -84,7 +84,7 @@ public class ClientInvoiceService {
 				.findFirst()
 				.orElseThrow(() -> new RuntimeException("No supplier ID found"));
 
-		BigDecimal commissionRate = parsePercentage(agentarvodeField.value());
+		Optional<BigDecimal> commissionRate = parsePercentage(agentarvodeField.value());
 		BigDecimal netPrice = zeroPaddedDoubleToBigDecimal(clientInvoiceResponse.amount());
 		BigDecimal vatAmount = zeroPaddedDoubleToBigDecimal(clientInvoiceResponse.vat());
 		BigDecimal grossPrice = netPrice.add(vatAmount);
@@ -114,9 +114,9 @@ public class ClientInvoiceService {
 				new SupplierId(klientIDField.value()));
 	}
 
-	private static BigDecimal parsePercentage(String percentageString) throws ParseException {
+	private static Optional<BigDecimal> parsePercentage(String percentageString) throws ParseException {
 		if (percentageString == null || percentageString.isEmpty()) {
-			throw new IllegalArgumentException("Percentage string cannot be null or empty.");
+			return Optional.empty();
 		}
 
 		// Remove the '%' character
@@ -128,7 +128,7 @@ public class ClientInvoiceService {
 		BigDecimal bigDecimal = BigDecimal.valueOf(number.doubleValue()).setScale(4, RoundingMode.HALF_UP);
 
 		// Convert the number to a decimal representation of the percentage
-		return bigDecimal.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP);
+		return Optional.of(bigDecimal.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP));
 	}
 
 	private static BigDecimal zeroPaddedDoubleToBigDecimal(double value) {

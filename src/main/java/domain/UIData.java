@@ -1,9 +1,11 @@
 package domain;
 
+import java.util.Optional;
+
 public record UIData(
 		ClientInvoice clientInvoice,
 		User user,
 		Supplier supplier,
-		SerialNumber currentSerialNumber
+		Optional<SerialNumber> serialNumber
 ) {
 }

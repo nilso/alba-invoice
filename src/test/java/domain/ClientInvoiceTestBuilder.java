@@ -57,7 +57,7 @@ public class ClientInvoiceTestBuilder {
 				.netPrice(netPrice)
 				.vatAmount(vatAmount)
 				.currency(currency)
-				.commissionRate(commissionRate)
+				.commissionRate(Optional.of(commissionRate))
 				.supplierId(supplierId)
 				.build();
 	}

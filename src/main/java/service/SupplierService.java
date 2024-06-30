@@ -21,31 +21,19 @@ public class SupplierService {
 		this.supplierFacade = supplierFacade;
 	}
 
-	public PaymentMethod createIban(SupplierResponse supplierResponse) {
-		String iban = getIban(supplierResponse.iban());
-		String bic = getBic(supplierResponse.iban());
-		return new PaymentMethod("BIC", bic, Optional.of("IBAN"), Optional.of(iban));
-	}
-
-	private static String getIban(String iban) {
-		String[] parts = iban.split("-");
-		return parts[1];
-	}
-
-	private static String getBic(String iban) {
-		String[] parts = iban.split("-");
-		return parts[0];
-	}
-
 	public Map<InvoiceId, Supplier> getSupplierMap(List<ClientInvoice> clientInvoices) {
 		Map<InvoiceId, Supplier> supplierMap = new HashMap<>();
 
 		clientInvoices.forEach(invoice -> {
+			if (invoice.supplierId().getId().isEmpty()) {
+				return;
+			}
+
 			try {
 				SupplierResponse supplierResponse = supplierFacade.fetchSupplier(invoice.supplierId());
 				supplierMap.put(invoice.id(), mapSupplier(supplierResponse));
 			} catch (Exception e) {
-				log.error("Failed to fetch supplier: ", e);
+				log.error("Failed to fetch supplier for invoice: {}", invoice, e);
 			}
 		});
 
@@ -64,18 +52,18 @@ public class SupplierService {
 	}
 
 	private PaymentMethod findPaymentMethod(SupplierResponse resp) {
-		if (!resp.bankgiro().equals("0")) {
+		if (resp.bankgiro() != null && !resp.bankgiro().equals("0")) {
 			return new PaymentMethod("Bankgiro", addDashToBankgiro(resp.bankgiro()), Optional.empty(), Optional.empty());
-		} else if (!resp.plusgiro().equals("0")) {
+		} else if (resp.plusgiro() != null && !resp.plusgiro().equals("0")) {
 			return new PaymentMethod("Plusgiro", addDashToPlusgiro(resp.plusgiro()), Optional.empty(), Optional.empty());
-		} else if (!resp.swedishBankAccount().isEmpty()) {
+		} else if (resp.swedishBankAccount() != null && !resp.swedishBankAccount().isEmpty()) {
 			return new PaymentMethod("Bankkonto", resp.swedishBankAccount(), Optional.empty(), Optional.empty());
-		} else if (!resp.iban().isEmpty()) {
+		} else if (resp.iban() != null && !resp.iban().isEmpty()) {
 			return createIban(resp);
-		} else if (!resp.internationalBankAccountWithRouting().isEmpty()) {
+		} else if (resp.internationalBankAccountWithRouting() != null && !resp.internationalBankAccountWithRouting().isEmpty()) {
 			return new PaymentMethod("Bankkonto", resp.internationalBankAccountWithRouting(), Optional.empty(), Optional.empty());
 		} else {
-			throw new RuntimeException("No or unknown PaymentMethod found");
+			throw new RuntimeException("No or unknown PaymentMethod found {}" + resp);
 		}
 	}
 
@@ -89,6 +77,22 @@ public class SupplierService {
 		StringBuilder sb = new StringBuilder(plusgiroNumber);
 		sb.insert(plusgiroNumber.length() - 1, '-');
 		return sb.toString();
+	}
+
+	public PaymentMethod createIban(SupplierResponse supplierResponse) {
+		String iban = getIban(supplierResponse.iban());
+		String bic = getBic(supplierResponse.iban());
+		return new PaymentMethod("BIC", bic, Optional.of("IBAN"), Optional.of(iban));
+	}
+
+	private static String getIban(String iban) {
+		String[] parts = iban.split("-");
+		return parts[1];
+	}
+
+	private static String getBic(String iban) {
+		String[] parts = iban.split("-");
+		return parts[0];
 	}
 
 	public List<Supplier> getAllSuppliers() throws Exception {

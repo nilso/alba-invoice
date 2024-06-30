@@ -9,6 +9,7 @@ import domain.SupplierId;
 
 class SupplierFacadeTest {
 
+	@Disabled
 	@Test
 	void fetchAllSuppliers() {
 		SupplierFacade supplierFacade = new SupplierFacade(new PEHttpClient());

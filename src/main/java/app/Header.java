@@ -1,6 +1,6 @@
 package app;
 
-import static app.Table.refreshTable;
+import static app.Table.repopulateTable;
 
 import java.util.Map;
 
@@ -70,7 +70,7 @@ public class Header {
 					try {
 						Map<InvoiceId, UIData> uiData = uiDataService.fetchUIData(inputValue);
 						Platform.runLater(() -> {
-							refreshTable(table, uiData);
+							repopulateTable(table, uiData.values().stream().toList());
 							enable(refreshButton, textField, progressIndicator, table);
 						});
 					} catch (Exception e) {

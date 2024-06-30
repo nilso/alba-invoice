@@ -1,14 +1,17 @@
 package app;
 
-import static app.FXMain.uiData;
+import static app.FXMain.uiDataMap;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import app.domain.ClientInvoiceTableItem;
 import domain.InvoiceId;
+import domain.SerialNumber;
 import domain.SupplierInvoice;
 import domain.SupplierInvoiceRequest;
+import domain.UIData;
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
@@ -25,7 +28,8 @@ public class Footer {
 	private final SupplierInvoiceService supplierInvoiceService;
 	private final PdfCreator pdfCreator;
 
-	public Footer(SupplierInvoiceService supplierInvoiceService, PdfCreator pdfCreator) {
+	public Footer(SupplierInvoiceService supplierInvoiceService,
+			PdfCreator pdfCreator) {
 		this.supplierInvoiceService = supplierInvoiceService;
 		this.pdfCreator = pdfCreator;
 	}
@@ -62,19 +66,33 @@ public class Footer {
 		button.setDisable(true);
 		List<String> fileNames = new ArrayList<>();
 		items.forEach(item -> {
-			SupplierInvoice supplierInvoice = supplierInvoiceService.createSupplierInvoice(
-					uiData.get(new InvoiceId(item.id())).clientInvoice(),
-					uiData.get(new InvoiceId(item.id())).currentSerialNumber(),
-					uiData.get(new InvoiceId(item.id())).supplier(),
-					uiData.get(new InvoiceId(item.id())).user()
-			);
-			SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice);
-			fileNames.add(file.filename());
-			table.getItems().remove(item);
+			log.info("Creating invoice for item: {}", item);
+
+			UIData uiData = uiDataMap.get(new InvoiceId(item.id()));
+			if (item.lastSerialNumber().isEmpty()) {
+				log.warn("Could not find serial number for item: {}", item);
+				alert("Löpnr saknas", "Löpnr måste vara satt", AlertType.ERROR);
+			} else if (item.commissionRate().isEmpty()) {
+				log.warn("Could not find commission rate for item: {}", item);
+				alert("Agentarvode saknas", "Agentarvode måste vara satt", AlertType.ERROR);
+			} else {
+
+				BigDecimal commissionRate = new BigDecimal(item.commissionRate());
+				SerialNumber currentSerialNumber = serialNumberFromTable(item.lastSerialNumber());
+				SupplierInvoice supplierInvoice = supplierInvoiceService.createSupplierInvoice(
+						uiData.clientInvoice().withUITableData(commissionRate),
+						currentSerialNumber,
+						uiData.supplier(),
+						uiData.user()
+				);
+				SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice);
+				fileNames.add(file.filename());
+				table.getItems().remove(item);
+				String message = String.join("\n • ", fileNames);
+				alert(fileNames.size() + " fakturor skapade", "•  " + message, AlertType.INFORMATION);
+			}
 		});
 		button.setDisable(false);
-		String message = String.join("\n • ", fileNames);
-		alert(fileNames.size() + " fakturor skapade", "•  " + message, AlertType.INFORMATION);
 	}
 
 	private void alert(String title, String message, AlertType type) {
@@ -84,4 +102,14 @@ public class Footer {
 		alert.setContentText(message);
 		alert.showAndWait();
 	}
+
+	public SerialNumber serialNumberFromTable(String input) {
+		if (input == null || !input.contains("-")) {
+			throw new IllegalArgumentException("Input must contain a hyphen (-)");
+		}
+
+		String[] parts = input.split("-");
+		return new SerialNumber(parts[0], Integer.parseInt(parts[1]));
+	}
+
 }

@@ -20,6 +20,7 @@ import domain.InvoiceId;
 import domain.Supplier;
 import domain.SupplierResponse;
 import domain.SupplierResponseTestBuilder;
+import facade.PEHttpClient;
 import facade.SupplierFacade;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,5 +53,13 @@ class SupplierServiceTest {
 		Supplier result = supplierMap.get(new InvoiceId(invoiceNr));
 		assertEquals("Bankgiro", result.paymentMethod().name());
 		assertEquals(bankGiroNumberExpected, result.paymentMethod().number());
+	}
+
+	@Disabled
+	@Test
+	void fetchAllSuppliers() throws Exception {
+		PEHttpClient peHttpClient = new PEHttpClient();
+		SupplierService supplierService = new SupplierService(new SupplierFacade(peHttpClient));
+		System.out.println(supplierService.getAllSuppliers());
 	}
 }

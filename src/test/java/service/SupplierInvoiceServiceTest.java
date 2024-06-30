@@ -10,7 +10,6 @@ import domain.Commission;
 
 class SupplierInvoiceServiceTest {
 
-
 	private static final SupplierInvoiceService supplierInvoiceService = new SupplierInvoiceService();
 
 }

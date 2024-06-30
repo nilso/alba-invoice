@@ -22,7 +22,28 @@ public record ClientInvoice(
 		BigDecimal netPrice,
 		BigDecimal vatAmount,
 		String currency,
-		BigDecimal commissionRate,
+		Optional<BigDecimal> commissionRate,
 		SupplierId supplierId
 ) {
+	public ClientInvoice withUITableData(BigDecimal commissionRate) {
+		return ClientInvoice.builder()
+				.id(id)
+				.client(client)
+				.invoiceNr(invoiceNr)
+				.ourReferenceId(ourReferenceId)
+				.yourReference(yourReference)
+				.invoiceAddress(invoiceAddress)
+				.productRows(productRows)
+				.invoiceDate(invoiceDate)
+				.dueDate(dueDate)
+				.grossPrice(grossPrice)
+				.roundingAmount(roundingAmount)
+				.netPrice(netPrice)
+				.vatAmount(vatAmount)
+				.currency(currency)
+				.commissionRate(Optional.of(commissionRate))
+				.supplierId(supplierId)
+				.build();
+
+	}
 }

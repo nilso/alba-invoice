@@ -6,22 +6,26 @@ public final class ClientInvoiceTableItem {
 	private final String id;
 	private final String invoiceNr;
 	private final double grossPrice;
-	private final double commissionRate;
+	private final String clientName;
 	@Setter
-	private String clientName;
+	private String commissionRate;
+	@Setter
+	private String lastSerialNumber;
 
 	public ClientInvoiceTableItem(
 			String id,
 			String clientName,
 			String invoiceNr,
 			double grossPrice,
-			double commissionRate
+			String commissionRate,
+			String lastSerialNumber
 	) {
 		this.id = id;
 		this.clientName = clientName;
 		this.invoiceNr = invoiceNr;
 		this.grossPrice = grossPrice;
 		this.commissionRate = commissionRate;
+		this.lastSerialNumber = lastSerialNumber;
 	}
 
 	public String id() {
@@ -40,8 +44,12 @@ public final class ClientInvoiceTableItem {
 		return grossPrice;
 	}
 
-	public double commissionRate() {
+	public String commissionRate() {
 		return commissionRate;
+	}
+
+	public String lastSerialNumber() {
+		return lastSerialNumber;
 	}
 
 	@Override
@@ -50,8 +58,9 @@ public final class ClientInvoiceTableItem {
 				"id='" + id + '\'' +
 				", invoiceNr='" + invoiceNr + '\'' +
 				", grossPrice=" + grossPrice +
-				", commissionRate=" + commissionRate +
 				", clientName='" + clientName + '\'' +
+				", commissionRate='" + commissionRate + '\'' +
+				", lastSerialNumber='" + lastSerialNumber + '\'' +
 				'}';
 	}
 }

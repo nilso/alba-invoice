@@ -26,7 +26,7 @@ public class UserService {
 			try {
 				userMap.put(invoice.id(), userFacade.fetchUserName(invoice.ourReferenceId().id()));
 			} catch (Exception e) {
-				log.error("Failed to fetch user: " + e);
+				log.error("Failed to fetch user: ", e);
 			}
 		});
 

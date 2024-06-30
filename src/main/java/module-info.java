@@ -1,7 +1,7 @@
 module alba.invoice {
 	requires javafx.controls;
 	requires javafx.fxml;
-	requires static lombok;
+	requires lombok;
 	requires com.fasterxml.jackson.databind;
 	requires com.fasterxml.jackson.datatype.jsr310;
 	requires org.slf4j;
@@ -16,6 +16,7 @@ module alba.invoice {
 	exports app.domain;
 	opens domain to com.fasterxml.jackson.databind;
 	exports service;
+	exports facade;
 	exports util;
 	opens service to javafx.fxml;
 	exports domain;
