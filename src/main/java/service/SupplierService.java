@@ -41,6 +41,7 @@ public class SupplierService {
 	}
 
 	private Supplier mapSupplier(SupplierResponse resp) {
+		log.info("Mapping supplier: {}", resp);
 		PaymentMethod paymentMethod = findPaymentMethod(resp);
 		return new Supplier(resp.id(),
 				resp.countryCode(),
@@ -63,7 +64,8 @@ public class SupplierService {
 		} else if (resp.internationalBankAccountWithRouting() != null && !resp.internationalBankAccountWithRouting().isEmpty()) {
 			return new PaymentMethod("Bankkonto", resp.internationalBankAccountWithRouting(), Optional.empty(), Optional.empty());
 		} else {
-			throw new RuntimeException("No or unknown PaymentMethod found {}" + resp);
+			log.info("No payment method found for supplier: {}", resp);
+			return new PaymentMethod("", "", Optional.empty(), Optional.empty());
 		}
 	}
 
@@ -86,13 +88,23 @@ public class SupplierService {
 	}
 
 	private static String getIban(String iban) {
-		String[] parts = iban.split("-");
-		return parts[1];
+		try {
+			String[] parts = iban.split("-");
+			return parts[1];
+		} catch (Exception e) {
+			log.error("Failed to get IBAN: ", e);
+			return "";
+		}
 	}
 
 	private static String getBic(String iban) {
-		String[] parts = iban.split("-");
-		return parts[0];
+		try {
+			String[] parts = iban.split("-");
+			return parts[0];
+		} catch (Exception e) {
+			log.error("Failed to get BIC: ", e);
+			return "";
+		}
 	}
 
 	public List<Supplier> getAllSuppliers() throws Exception {

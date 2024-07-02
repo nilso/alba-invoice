@@ -3,8 +3,8 @@ package util;
 import static util.BigDecimalUtil.bigDecimalToPercent;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
@@ -29,25 +29,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PdfCreator {
 	private static final String FILE_SUFFIX = ".pdf";
-	static boolean SETemplate = true;
-	String SE_TEMPLATE = "selfinvoice_template_SE.pdf";
-	String EN_TEMPLATE = "selfinvoice_template_EN.pdf";
+	private static boolean SETemplate = true;
+	String SE_TEMPLATE = "/selfinvoice_template_SE.pdf";
+	String EN_TEMPLATE = "/selfinvoice_template_EN.pdf";
 
 	public PdfCreator() {
 
 	}
 
 	public SupplierInvoiceRequest.File createPdf(SupplierInvoice supplierInvoice) {
-		String file;
+		InputStream pdfStream;
 		SETemplate = supplierInvoice.supplierInfo().countryCode().equals("SE");
 
 		if (SETemplate) {
-			file = Objects.requireNonNull(this.getClass().getClassLoader().getResource(SE_TEMPLATE)).getFile();
+			pdfStream = Objects.requireNonNull(getClass().getResourceAsStream(SE_TEMPLATE));
 		} else {
-			file = Objects.requireNonNull(this.getClass().getClassLoader().getResource(EN_TEMPLATE)).getFile();
+			pdfStream = Objects.requireNonNull(getClass().getResourceAsStream(EN_TEMPLATE));
 		}
 
-		try (PDDocument document = PDDocument.load(new File(file))) {
+		try (PDDocument document = PDDocument.load(pdfStream)) {
 			PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 			if (acroForm != null) {
 				writeSupplierSection(acroForm, supplierInvoice);
