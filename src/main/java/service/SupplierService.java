@@ -9,7 +9,9 @@ import domain.ClientInvoice;
 import domain.InvoiceId;
 import domain.PaymentMethod;
 import domain.Supplier;
+import domain.SupplierId;
 import domain.SupplierResponse;
+import exception.GetSupplierException;
 import facade.SupplierFacade;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,17 +23,18 @@ public class SupplierService {
 		this.supplierFacade = supplierFacade;
 	}
 
-	public Map<InvoiceId, Supplier> getSupplierMap(List<ClientInvoice> clientInvoices) {
-		Map<InvoiceId, Supplier> supplierMap = new HashMap<>();
+	public Map<InvoiceId, Optional<Supplier>> getSupplierMap(List<ClientInvoice> clientInvoices) {
+		Map<InvoiceId, Optional<Supplier>> supplierMap = new HashMap<>();
 
 		clientInvoices.forEach(invoice -> {
-			if (invoice.supplierId().getId().isEmpty()) {
+			if (invoice.supplierId().isEmpty()) {
+				supplierMap.put(invoice.id(), Optional.empty());
 				return;
 			}
 
 			try {
-				SupplierResponse supplierResponse = supplierFacade.fetchSupplier(invoice.supplierId());
-				supplierMap.put(invoice.id(), mapSupplier(supplierResponse));
+				SupplierResponse supplierResponse = supplierFacade.fetchSupplier(invoice.supplierId().get());
+				supplierMap.put(invoice.id(), Optional.of(mapSupplier(supplierResponse)));
 			} catch (Exception e) {
 				log.error("Failed to fetch supplier for invoice: {}", invoice, e);
 			}
@@ -111,5 +114,15 @@ public class SupplierService {
 		return supplierFacade.fetchAllSuppliers().stream()
 				.map(this::mapSupplier)
 				.toList();
+	}
+
+	public Supplier getSupplier(SupplierId supplierId) throws GetSupplierException {
+		try {
+			SupplierResponse supplierResponse = supplierFacade.fetchSupplier(supplierId);
+			return mapSupplier(supplierResponse);
+		} catch (Exception e) {
+			log.error("Failed to fetch supplier for supplierId: {}", supplierId, e);
+			throw new GetSupplierException(e.getMessage());
+		}
 	}
 }

@@ -34,7 +34,7 @@ class SupplierInvoiceFacadeTest {
 
 		when(peHttpClient.httpGet(endpoint)).thenReturn(responseBody);
 
-		Map<SupplierId, List<SupplierInvoiceResponse>> result = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+		List<SupplierInvoiceResponse> result = supplierInvoiceFacade.fetchInvoicesOneYearBack();
 		assertTrue(result.isEmpty());
 	}
 
@@ -43,6 +43,6 @@ class SupplierInvoiceFacadeTest {
 	void actuallyFetch() throws Exception {
 		PEHttpClient realClient = new PEHttpClient();
 		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient);
-		System.out.println(realFacade.fetchInvoicesOneYearBack());
+		realFacade.fetchInvoicesOneYearBack();
 	}
 }

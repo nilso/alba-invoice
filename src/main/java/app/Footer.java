@@ -75,23 +75,29 @@ public class Footer {
 			} else if (item.commissionRate().isEmpty()) {
 				log.warn("Could not find commission rate for item: {}", item);
 				alert("Agentarvode saknas", "Agentarvode måste vara satt", AlertType.ERROR);
+			} else if (item.supplierId().isEmpty()) {
+				log.warn("Could not find supplier for item: {}", item);
+				alert("KlientId saknas", "KlientId måste vara satt", AlertType.ERROR);
 			} else {
-
 				BigDecimal commissionRate = new BigDecimal(item.commissionRate());
 				SerialNumber currentSerialNumber = serialNumberFromTable(item.lastSerialNumber());
 				SupplierInvoice supplierInvoice = supplierInvoiceService.createSupplierInvoice(
 						uiData.clientInvoice().withUITableData(commissionRate),
 						currentSerialNumber,
-						uiData.supplier(),
+						uiData.supplier().get(),
 						uiData.user()
 				);
 				SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice);
 				fileNames.add(file.filename());
 				table.getItems().remove(item);
-				String message = String.join("\n • ", fileNames);
-				alert(fileNames.size() + " fakturor skapade", "•  " + message, AlertType.INFORMATION);
 			}
 		});
+
+		if (!fileNames.isEmpty()) {
+			String message = String.join("\n • ", fileNames);
+			alert(fileNames.size() + " fakturor skapade", "•  " + message, AlertType.INFORMATION);
+		}
+
 		button.setDisable(false);
 	}
 

@@ -9,7 +9,10 @@ import java.util.List;
 import app.domain.ClientInvoiceTableItem;
 import domain.ClientInvoice;
 import domain.SerialNumber;
+import domain.Supplier;
+import domain.SupplierId;
 import domain.UIData;
+import exception.GetSupplierException;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Alert;
@@ -19,10 +22,21 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import lombok.extern.slf4j.Slf4j;
+import service.SerialNumberService;
+import service.SupplierService;
 
 @Slf4j
 public class Table {
-	public static TableView<ClientInvoiceTableItem> createTable() {
+
+	private final SupplierService supplierService;
+	private final SerialNumberService serialNumberService;
+
+	public Table(SupplierService supplierService, SerialNumberService serialNumberService) {
+
+		this.supplierService = supplierService;
+		this.serialNumberService = serialNumberService;
+	}
+	public TableView<ClientInvoiceTableItem> createTable() {
 		TableView<ClientInvoiceTableItem> table = new TableView<>();
 
 		table.setEditable(true);
@@ -30,49 +44,41 @@ public class Table {
 
 		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
-		TableColumn<ClientInvoiceTableItem, String> clientNameColumn = createClientNameColumn();
-
-		TableColumn<ClientInvoiceTableItem, String> invoiceNrColumn = createInvoiceNrColumn();
-
-		TableColumn<ClientInvoiceTableItem, Number> grossPriceColumn = createGrossPriceColumn();
-
-		TableColumn<ClientInvoiceTableItem, String> commissionRateColumn = createCommissionRateColumn(table);
-
-		TableColumn<ClientInvoiceTableItem, String> serialNumberColumn = createSerialNumberColumn(table);
-
-		table.getColumns().add(clientNameColumn);
-		table.getColumns().add(invoiceNrColumn);
-		table.getColumns().add(grossPriceColumn);
-		table.getColumns().add(commissionRateColumn);
-		table.getColumns().add(serialNumberColumn);
+		table.getColumns().add(createClientNameColumn());
+		table.getColumns().add(createInvoiceNrColumn());
+		table.getColumns().add(createGrossPriceColumn());
+		table.getColumns().add(createCommissionRateColumn(table));
+		table.getColumns().add(createSupplierNameColumn());
+		table.getColumns().add(createSupplierIdTable(table));
+		table.getColumns().add(createSerialNumberColumn(table));
 
 		table.setPlaceholder(new Label("Inga fakturor att visa för perioden"));
 
 		return table;
 	}
 
-	private static TableColumn<ClientInvoiceTableItem, String> createClientNameColumn() {
-		TableColumn<ClientInvoiceTableItem, String> clientNameColumn = new TableColumn<>("Fakturamottagare");
+	private TableColumn<ClientInvoiceTableItem, String> createClientNameColumn() {
+		TableColumn<ClientInvoiceTableItem, String> clientNameColumn = new TableColumn<>("Kundens namn");
 		clientNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().clientName()));
 		clientNameColumn.setMinWidth(200);
 		return clientNameColumn;
 	}
 
-	private static TableColumn<ClientInvoiceTableItem, String> createInvoiceNrColumn() {
-		TableColumn<ClientInvoiceTableItem, String> invoiceNrColumn = new TableColumn<>("Fakturanummer");
+	private TableColumn<ClientInvoiceTableItem, String> createInvoiceNrColumn() {
+		TableColumn<ClientInvoiceTableItem, String> invoiceNrColumn = new TableColumn<>("Kundfaktura");
 		invoiceNrColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().invoiceNr()));
 		invoiceNrColumn.setMinWidth(100);
 		return invoiceNrColumn;
 	}
 
-	private static TableColumn<ClientInvoiceTableItem, Number> createGrossPriceColumn() {
+	private TableColumn<ClientInvoiceTableItem, Number> createGrossPriceColumn() {
 		TableColumn<ClientInvoiceTableItem, Number> grossPriceColumn = new TableColumn<>("Belopp");
 		grossPriceColumn.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().grossPrice()));
 		grossPriceColumn.setMinWidth(100);
 		return grossPriceColumn;
 	}
 
-	private static TableColumn<ClientInvoiceTableItem, String> createCommissionRateColumn(TableView<ClientInvoiceTableItem> table) {
+	private TableColumn<ClientInvoiceTableItem, String> createCommissionRateColumn(TableView<ClientInvoiceTableItem> table) {
 		TableColumn<ClientInvoiceTableItem, String> commissionRateColumn = new TableColumn<>("Agentarvode %");
 		commissionRateColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().commissionRate()));
 		commissionRateColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -98,7 +104,14 @@ public class Table {
 		return commissionRateColumn;
 	}
 
-	private static TableColumn<ClientInvoiceTableItem, String> createSerialNumberColumn(TableView<ClientInvoiceTableItem> table) {
+	private TableColumn<ClientInvoiceTableItem, String> createSupplierNameColumn() {
+		TableColumn<ClientInvoiceTableItem, String> supplierNameColumn = new TableColumn<>("Klientens namn");
+		supplierNameColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().supplierName()));
+		supplierNameColumn.setMinWidth(200);
+		return supplierNameColumn;
+	}
+
+	private TableColumn<ClientInvoiceTableItem, String> createSerialNumberColumn(TableView<ClientInvoiceTableItem> table) {
 		TableColumn<ClientInvoiceTableItem, String> serialNumberColumn = new TableColumn<>("Senaste löpnr");
 		serialNumberColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().lastSerialNumber()));
 		serialNumberColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -118,7 +131,7 @@ public class Table {
 		return serialNumberColumn;
 	}
 
-	private static void alert(String title, String message) {
+	private void alert(String title, String message) {
 		Alert alert = new Alert(Alert.AlertType.ERROR);
 		alert.setTitle(title);
 		alert.setHeaderText(null);
@@ -126,8 +139,37 @@ public class Table {
 		alert.showAndWait();
 	}
 
-	private static boolean validateSerialNumber(String input) {
+	private boolean validateSerialNumber(String input) {
 		return input.contains("-");
+	}
+
+	private TableColumn<ClientInvoiceTableItem, String> createSupplierIdTable(TableView<ClientInvoiceTableItem> table) {
+		TableColumn<ClientInvoiceTableItem, String> supplierIdColumn = new TableColumn<>("KlientId");
+		supplierIdColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().supplierId()));
+		supplierIdColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+		supplierIdColumn.setOnEditCommit(event -> {
+			ClientInvoiceTableItem item = event.getRowValue();
+			String newValue = event.getNewValue();
+			try {
+				Supplier supplier = supplierService.getSupplier(new SupplierId(newValue));
+				SerialNumber serialNumber = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
+				item.setSupplierName(supplier.name());
+				item.setSupplierId(supplier.id().getId());
+				item.setLastSerialNumber(serialNumber.fullSerialNumber());
+			} catch (GetSupplierException e) {
+				log.warn("Failed to get supplier: {}", newValue, e);
+				alert("Felaktigt klientId",
+						String.format("Lyckades inte hitta klient med KlientId : %s, dubbelkolla att det stämmer", newValue));
+			} catch (Exception e) {
+				log.warn("Failed to get serial number for supplier: {}", newValue, e);
+				alert("Felaktigt klientId",
+						String.format("Lyckades inte hitta löpnummer för klient med KlientId : %s", newValue));
+			}
+			table.refresh();
+
+		});
+		supplierIdColumn.setMinWidth(100);
+		return supplierIdColumn;
 	}
 
 	public static void repopulateTable(TableView<ClientInvoiceTableItem> table, List<UIData> uiDatas) {
@@ -140,12 +182,18 @@ public class Table {
 		uiDatas.forEach(data -> {
 			log.info("Populating table with data: {}", data);
 			ClientInvoice clientInvoice = data.clientInvoice();
-			String serialNumberDisplayText = data.serialNumber().map(SerialNumber::displayText).orElse("");
-			table.getItems().add(mapClientInvoiceTableItem(clientInvoice, serialNumberDisplayText));
+			String fullSerialNumber = data.serialNumber().map(SerialNumber::fullSerialNumber).orElse("");
+			String supplierName = data.supplier().map(Supplier::name).orElse("");
+			String supplierId = data.supplier().map(supplier -> supplier.id().getId()).orElse("");
+
+			table.getItems().add(mapClientInvoiceTableItem(clientInvoice, fullSerialNumber, supplierName, supplierId));
 		});
 	}
 
-	private static ClientInvoiceTableItem mapClientInvoiceTableItem(ClientInvoice clientInvoice, String serialNumberDisplayText) {
+	private static ClientInvoiceTableItem mapClientInvoiceTableItem(ClientInvoice clientInvoice,
+			String fullSerialNumber,
+			String supplierName,
+			String supplierId) {
 
 		String commissionRate;
 		if (clientInvoice.commissionRate().isEmpty()) {
@@ -160,7 +208,9 @@ public class Table {
 				clientInvoice.invoiceNr(),
 				clientInvoice.grossPrice().doubleValue(),
 				commissionRate,
-				serialNumberDisplayText
+				fullSerialNumber,
+				supplierName,
+				supplierId
 		);
 	}
 

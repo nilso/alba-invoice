@@ -1,6 +1,5 @@
 package app;
 
-import static app.Table.createTable;
 import static app.Table.populateTable;
 
 import java.util.Map;
@@ -43,6 +42,7 @@ public class FXMain extends Application {
 	private static final PdfCreator pdfCreator;
 	private static final UIDataService uiDataService;
 	private static final Header header;
+	private static final Table table;
 	private static final Footer footer;
 	public static Map<InvoiceId, UIData> uiDataMap;
 
@@ -55,12 +55,13 @@ public class FXMain extends Application {
 		supplierFacade = new SupplierFacade(peHttpClient);
 		supplierService = new SupplierService(supplierFacade);
 		supplierInvoiceFacade = new SupplierInvoiceFacade(peHttpClient);
-		serialNumberService = new SerialNumberService(supplierInvoiceFacade);
+		serialNumberService = new SerialNumberService(supplierInvoiceFacade, supplierService);
 		pdfCreator = new PdfCreator();
 		supplierInvoiceService = new SupplierInvoiceService();
 		uiDataService = new UIDataService(clientInvoiceService, userService, supplierService, serialNumberService);
 		header = new Header(uiDataService);
 		footer = new Footer(supplierInvoiceService, pdfCreator);
+		table  = new Table(supplierService, serialNumberService);
 	}
 
 	public static void main(String[] args) {
@@ -71,17 +72,17 @@ public class FXMain extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		uiDataMap = uiDataService.fetchUIData();
 
-		TableView<ClientInvoiceTableItem> table = createTable();
+		TableView<ClientInvoiceTableItem> tableView = table.createTable();
 
-		populateTable(table, uiDataMap.values().stream().toList());
+		populateTable(tableView, uiDataMap.values().stream().toList());
 
-		Button createInvoiceButton = footer.addCreateInvoiceButton(table);
+		Button createInvoiceButton = footer.addCreateInvoiceButton(tableView);
 
-		VBox inputField = header.getHeader(table);
-		VBox vbox = new VBox(inputField, table, createInvoiceButton);
+		VBox inputField = header.getHeader(tableView);
+		VBox vbox = new VBox(inputField, tableView, createInvoiceButton);
 
 		Scene scene = new Scene(vbox);
-		primaryStage.setTitle("Alba");
+		primaryStage.setTitle("AlbaInvoice");
 		primaryStage.setScene(scene);
 		primaryStage.sizeToScene();
 		primaryStage.show();

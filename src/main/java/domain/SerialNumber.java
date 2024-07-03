@@ -5,7 +5,7 @@ public record SerialNumber(String prefix, Integer suffix) {
 		return new SerialNumber(prefix, suffix + steps);
 	}
 
-	public String displayText() {
+	public String fullSerialNumber() {
 		return prefix + "-" + suffix;
 	}
 }

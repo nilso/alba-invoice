@@ -23,7 +23,7 @@ public record ClientInvoice(
 		BigDecimal vatAmount,
 		String currency,
 		Optional<BigDecimal> commissionRate,
-		SupplierId supplierId
+		Optional<SupplierId> supplierId
 ) {
 	public ClientInvoice withUITableData(BigDecimal commissionRate) {
 		return ClientInvoice.builder()

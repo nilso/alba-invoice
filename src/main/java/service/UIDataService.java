@@ -39,14 +39,17 @@ public class UIDataService {
 	public Map<InvoiceId, UIData> fetchUIData(List<ClientInvoice> clientInvoices) throws Exception {
 		Map<InvoiceId, UIData> uiData = new HashMap<>();
 		Map<InvoiceId, User> userMap = userService.getUserMap(clientInvoices);
-		Map<InvoiceId, Supplier> supplierMap = supplierService.getSupplierMap(clientInvoices);
-		Map<SupplierNameKey, SerialNumber> currentSerialNumbers = serialNumberService.getCurrentSerialOrNewIfNone(supplierMap.values().stream().toList());
+		Map<InvoiceId, Optional<Supplier>> supplierMap = supplierService.getSupplierMap(clientInvoices);
+		Map<SupplierNameKey, SerialNumber> currentSerialNumbers = serialNumberService.getCurrentSerialOrNewIfNone(supplierMap.values().stream()
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.toList());
 
 		for (ClientInvoice clientInvoice : clientInvoices) {
-			Supplier supplier = supplierMap.get(clientInvoice.id());
+			Optional<Supplier> supplier = supplierMap.get(clientInvoice.id());
 			Optional<SerialNumber> currentSerialNumber = Optional.empty();
-			if (supplier != null) {
-				currentSerialNumber = Optional.of(currentSerialNumbers.get(new SupplierNameKey(supplierMap.get(clientInvoice.id()).name())));
+			if (supplier.isPresent()) {
+				currentSerialNumber = Optional.of(currentSerialNumbers.get(new SupplierNameKey(supplier.get().name())));
 			}
 			UIData data = new UIData(
 					clientInvoice,

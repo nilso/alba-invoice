@@ -1,85 +1,117 @@
 package service;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierId;
 import domain.SupplierInvoiceResponse;
 import domain.SupplierNameKey;
+import exception.GetCurrentSerialException;
 import facade.SupplierInvoiceFacade;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SerialNumberService {
 	private static int nrOfAlreadyIncrementedPrefix;
+	private static final Map<SupplierNameKey, SerialNumber> alreadyCreatedSeries = new HashMap<>();
 
 	private final SupplierInvoiceFacade supplierInvoiceFacade;
+	private final SupplierService supplierFacade;
 
-	public SerialNumberService(SupplierInvoiceFacade supplierInvoiceFacade) {
+	public SerialNumberService(SupplierInvoiceFacade supplierInvoiceFacade,
+			SupplierService supplierFacade) {
 		this.supplierInvoiceFacade = supplierInvoiceFacade;
+		this.supplierFacade = supplierFacade;
 		nrOfAlreadyIncrementedPrefix = 0;
 	}
 
 	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers) throws Exception {
-		Map<SupplierNameKey, SerialNumber> serialNumberMap = new HashMap<>();
+		try {
+			List<SupplierInvoiceResponse> allSupplierInvoices = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+			List<Supplier> allSuppliers = supplierFacade.getAllSuppliers();
 
-		Map<SupplierNameKey, List<SupplierId>> supplierNameIdMap = new HashMap<>();
+			Map<SupplierNameKey, List<SupplierId>> supplierIdsByName = mapSuppliersByName(suppliers, allSuppliers);
+
+			Map<SupplierNameKey, List<SupplierInvoiceResponse>> supplierInvoicesByName = mapInvoicesToSuppliers(supplierIdsByName, allSupplierInvoices);
+
+			return mapInvoicesToSerialNumbers(supplierInvoicesByName, allSupplierInvoices);
+
+		} catch (Exception e) {
+			log.error("Failed to fetch supplier invoices: ", e);
+			throw e;
+		}
+	}
+
+	public Map<SupplierNameKey, List<SupplierId>> mapSuppliersByName(List<Supplier> suppliers, List<Supplier> allSuppliers) {
+		Map<SupplierNameKey, List<SupplierId>> resultMap = new HashMap<>();
 
 		suppliers.forEach(supplier -> {
-			SupplierNameKey supplierName = new SupplierNameKey(supplier.name());
-			if (supplierNameIdMap.containsKey(supplierName)) {
-				supplierNameIdMap.get(supplierName).add(supplier.id());
+			SupplierNameKey key = new SupplierNameKey(supplier.name());
+			List<SupplierId> matchingSupplierIds = allSuppliers.stream()
+					.filter(supplier2 -> supplier2.name().equals(supplier.name()))
+					.map(Supplier::id)
+					.collect(Collectors.toList());
+
+			resultMap.put(key, matchingSupplierIds);
+		});
+
+		return resultMap;
+	}
+
+	public Map<SupplierNameKey, List<SupplierInvoiceResponse>> mapInvoicesToSuppliers(Map<SupplierNameKey, List<SupplierId>> supplierIdsByName,
+			List<SupplierInvoiceResponse> allInvoices) {
+		Map<SupplierNameKey, List<SupplierInvoiceResponse>> resultMap = new HashMap<>();
+
+		supplierIdsByName.forEach((supplierNameKey, supplierIds) -> {
+			List<SupplierInvoiceResponse> filteredInvoices = allInvoices.stream()
+					.filter(invoice -> supplierIds.contains(invoice.supplierRef().supplierId()))
+					.collect(Collectors.toList());
+
+			resultMap.put(supplierNameKey, filteredInvoices);
+		});
+
+		return resultMap;
+	}
+
+	public Map<SupplierNameKey, SerialNumber> mapInvoicesToSerialNumbers(Map<SupplierNameKey, List<SupplierInvoiceResponse>> supplierInvoicesByName,
+			List<SupplierInvoiceResponse> allSupplierInvoices) {
+		Map<SupplierNameKey, SerialNumber> serialNumberMap = new HashMap<>();
+
+		supplierInvoicesByName.forEach((key, value) -> {
+			SerialNumber serialNumber;
+			if (value.isEmpty()) {
+				log.info("No supplier invoices found for supplier with SupplierNameKey: {}", key);
+				serialNumber = createNewSerial(key, allSupplierInvoices);
 			} else {
-				List<SupplierId> supplierIds = new ArrayList<>();
-				supplierIds.add(supplier.id());
-				supplierNameIdMap.put(supplierName, supplierIds);
+				log.info("Found supplier invoices: {} for supplier with SupplierNameKey: {}", value, key);
+				serialNumber = getHighestSerialNumber(value);
 			}
+			serialNumberMap.put(key, serialNumber);
 		});
-
-		Map<SupplierId, List<SupplierInvoiceResponse>> supplierInvoices = supplierInvoiceFacade.fetchInvoicesOneYearBack();
-
-		supplierNameIdMap.forEach((key, supplierIds) -> {
-			try {
-				List<SupplierInvoiceResponse> currentSupplierInvoices = supplierIds.stream()
-						.filter(supplierInvoices::containsKey)
-						.map(supplierInvoices::get)
-						.flatMap(List::stream)
-						.toList();
-
-				SerialNumber serialNumber;
-				if (currentSupplierInvoices.isEmpty()) {
-					log.info("No supplier invoices found for supplier with IDs: {} and SupplierNameKey: {}", supplierIds, key);
-					serialNumber = createNewSerial(supplierInvoices);
-				} else {
-					log.info("Found supplier invoices for supplier with IDs: {} and SupplierNameKey: {}", supplierIds, key);
-					serialNumber = getHighestSerialNumber(currentSupplierInvoices);
-				}
-
-				supplierIds.forEach(supplierId -> serialNumberMap.put(key, serialNumber));
-			} catch (Exception e) {
-				log.error("Failed to fetch supplier invoices: ", e);
-			}
-		});
-
 		log.info("New serial numbers: {}", serialNumberMap);
 		return serialNumberMap;
 	}
 
-	private static SerialNumber createNewSerial(Map<SupplierId, List<SupplierInvoiceResponse>> supplierInvoices) {
-		if (supplierInvoices.isEmpty()) {
+	private static SerialNumber createNewSerial(SupplierNameKey supplierName, List<SupplierInvoiceResponse> allSupplierInvoices) {
+		if (allSupplierInvoices.isEmpty()) {
+			if (alreadyCreatedSeries.containsKey(supplierName)) {
+				return alreadyCreatedSeries.get(supplierName);
+			}
+
 			int newPrefixNumber = 1 + nrOfAlreadyIncrementedPrefix;
 			SerialNumber serialNumber = new SerialNumber("alba" + newPrefixNumber, 0);
 			nrOfAlreadyIncrementedPrefix++;
+			alreadyCreatedSeries.put(supplierName, serialNumber);
 			return serialNumber;
 		}
 
-		List<SerialNumber> serialNumbers = supplierInvoices.values().stream()
-				.map(invoice -> extractSerialNumber(invoice.getFirst().serialNumber()))
+		List<SerialNumber> serialNumbers = allSupplierInvoices.stream()
+				.map(invoice -> extractSerialNumber(invoice.serialNumber()))
 				.sorted((sn1, sn2) -> {
 					Integer num2 = extractAlbaNumber(sn2.prefix());
 					Integer num1 = extractAlbaNumber(sn1.prefix());
@@ -119,5 +151,52 @@ public class SerialNumberService {
 
 	private static int extractAlbaNumber(String prefix) {
 		return Integer.parseInt(prefix.replace("alba", ""));
+	}
+
+	public SerialNumber getCurrentSerialOrNewIfNone(Supplier supplier) {
+		try {
+			List<SupplierInvoiceResponse> allSupplierInvoices = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+			List<Supplier> allSuppliers = supplierFacade.getAllSuppliers();
+
+			List<SupplierId> matchingSupplierId = findMatchingSupplierIdsByName(supplier, allSuppliers);
+
+			List<SupplierInvoiceResponse> matchingInvoices = findMatchingInvoices(matchingSupplierId, allSupplierInvoices);
+
+			return mapInvoicesToSerialNumbers(new SupplierNameKey(supplier.name()), matchingInvoices, allSupplierInvoices);
+
+		} catch (Exception e) {
+			log.error("Failed to fetch supplier invoices: ", e);
+			throw new GetCurrentSerialException(e.getMessage());
+		}
+	}
+
+	public List<SupplierId> findMatchingSupplierIdsByName(Supplier supplier, List<Supplier> allSuppliers) {
+		return allSuppliers.stream()
+				.filter(supplier2 -> supplier2.name().equals(supplier.name()))
+				.map(Supplier::id)
+				.collect(Collectors.toList());
+	}
+
+	public List<SupplierInvoiceResponse> findMatchingInvoices(List<SupplierId> supplierIds,
+			List<SupplierInvoiceResponse> allInvoices) {
+		return allInvoices.stream()
+				.filter(invoice -> supplierIds.contains(invoice.supplierRef().supplierId()))
+				.collect(Collectors.toList());
+
+	}
+
+	public SerialNumber mapInvoicesToSerialNumbers(SupplierNameKey supplierNameKey, List<SupplierInvoiceResponse> matchingInvoices,
+			List<SupplierInvoiceResponse> allSupplierInvoices) {
+		SerialNumber serialNumber;
+		if (matchingInvoices.isEmpty()) {
+			log.info("No supplier invoices found for supplier with SupplierNameKey: {}", supplierNameKey);
+			serialNumber = createNewSerial(supplierNameKey, allSupplierInvoices);
+		} else {
+			log.info("Found supplier invoices: {} for supplier with SupplierNameKey: {}", matchingInvoices, supplierNameKey);
+			serialNumber = getHighestSerialNumber(matchingInvoices);
+		}
+		log.info("New serial number: {} for supplierNameKey: {}", serialNumber, supplierNameKey);
+		return serialNumber;
+
 	}
 }

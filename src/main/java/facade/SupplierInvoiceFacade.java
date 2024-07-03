@@ -5,15 +5,12 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import config.Config;
 import domain.InvoiceAmounts;
-import domain.SupplierId;
 import domain.SupplierInvoice;
 import domain.SupplierInvoiceRequest;
 import domain.SupplierInvoiceRequest.DepositAccount;
@@ -31,7 +28,7 @@ public class SupplierInvoiceFacade {
 		this.objectMapper = new ObjectMapper();
 	}
 
-	public Map<SupplierId, List<SupplierInvoiceResponse>> fetchInvoicesOneYearBack() throws Exception {
+	public List<SupplierInvoiceResponse> fetchInvoicesOneYearBack() throws Exception {
 
 		LocalDate oneYearAgo = getOneYearBack();
 		log.info("Fetching supplier invoices one year back: {}", oneYearAgo);
@@ -42,12 +39,11 @@ public class SupplierInvoiceFacade {
 		SupplierInvoicesResponse supplierInvoicesResponse = objectMapper.readValue(body, SupplierInvoicesResponse.class);
 		if (supplierInvoicesResponse.size() == 0) {
 			log.info("No supplier invoices found one year back: {}", oneYearAgo);
-			return Map.of();
+			return List.of();
 		}
 
 		log.info("Fetched {} supplier invoices for the financial year starting from: {}", supplierInvoicesResponse.size(), oneYearAgo);
-		return supplierInvoicesResponse.supplierInvoiceResponses().stream()
-				.collect(Collectors.groupingBy(supplierInvoiceResponse -> supplierInvoiceResponse.supplierRef().supplierId()));
+		return supplierInvoicesResponse.supplierInvoiceResponses();
 	}
 
 	public static LocalDate getOneYearBack() {

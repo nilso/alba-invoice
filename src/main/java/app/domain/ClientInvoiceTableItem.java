@@ -1,7 +1,9 @@
 package app.domain;
 
 import lombok.Setter;
+import lombok.ToString;
 
+@ToString
 public final class ClientInvoiceTableItem {
 	private final String id;
 	private final String invoiceNr;
@@ -11,6 +13,10 @@ public final class ClientInvoiceTableItem {
 	private String commissionRate;
 	@Setter
 	private String lastSerialNumber;
+	@Setter
+	private String supplierName;
+	@Setter
+	private String supplierId;
 
 	public ClientInvoiceTableItem(
 			String id,
@@ -18,7 +24,9 @@ public final class ClientInvoiceTableItem {
 			String invoiceNr,
 			double grossPrice,
 			String commissionRate,
-			String lastSerialNumber
+			String lastSerialNumber,
+			String supplierName,
+			String supplierId
 	) {
 		this.id = id;
 		this.clientName = clientName;
@@ -26,6 +34,8 @@ public final class ClientInvoiceTableItem {
 		this.grossPrice = grossPrice;
 		this.commissionRate = commissionRate;
 		this.lastSerialNumber = lastSerialNumber;
+		this.supplierName = supplierName;
+		this.supplierId = supplierId;
 	}
 
 	public String id() {
@@ -52,15 +62,11 @@ public final class ClientInvoiceTableItem {
 		return lastSerialNumber;
 	}
 
-	@Override
-	public String toString() {
-		return "ClientInvoiceTableItem{" +
-				"id='" + id + '\'' +
-				", invoiceNr='" + invoiceNr + '\'' +
-				", grossPrice=" + grossPrice +
-				", clientName='" + clientName + '\'' +
-				", commissionRate='" + commissionRate + '\'' +
-				", lastSerialNumber='" + lastSerialNumber + '\'' +
-				'}';
+	public String supplierName() {
+		return supplierName;
+	}
+
+	public String supplierId() {
+		return supplierId;
 	}
 }

@@ -44,8 +44,8 @@ public class ClientInvoiceService {
 		//TODO filtrera allt som har länkar till leverantörsfakturor.
 
 		List<ClientInvoice> clientInvoices = clientInvoiceResponses.stream()
-				.filter(response -> findCommission(response).isPresent())
-				.filter(response -> findSupplierId(response).isPresent())
+				//				.filter(response -> findCommission(response).isPresent())
+				//				.filter(response -> findSupplierId(response).isPresent())
 				.filter(ClientInvoiceResponse::certified)
 				.map(clientInvoiceResponse -> {
 					try {
@@ -61,20 +61,6 @@ public class ClientInvoiceService {
 		return clientInvoices;
 	}
 
-	private static Optional<Field> findCommission(ClientInvoiceResponse response) {
-		return response.fields().fields().stream()
-				.filter(field -> field.alias().equals("agentarvode"))
-				.filter(field -> field.value() != null && !field.value().isEmpty())
-				.findFirst();
-	}
-
-	private static Optional<Field> findSupplierId(ClientInvoiceResponse response) {
-		return response.fields().fields().stream()
-				.filter(field -> field.alias().equals("klientID"))
-				.filter(field -> field.value() != null && !field.value().isEmpty())
-				.findFirst();
-	}
-
 	private ClientInvoice mapClientInvoice(ClientInvoiceResponse clientInvoiceResponse, ClientResponse clientResponse) throws ParseException {
 		Field agentarvodeField = clientInvoiceResponse.fields().fields().stream()
 				.filter(field -> field.alias().equals("agentarvode"))
@@ -84,6 +70,7 @@ public class ClientInvoiceService {
 				.findFirst()
 				.orElseThrow(() -> new RuntimeException("No supplier ID found"));
 
+		Optional<SupplierId> supplierId = parseCustomFieldString(klientIDField.value());
 		Optional<BigDecimal> commissionRate = parsePercentage(agentarvodeField.value());
 		BigDecimal netPrice = zeroPaddedDoubleToBigDecimal(clientInvoiceResponse.amount());
 		BigDecimal vatAmount = zeroPaddedDoubleToBigDecimal(clientInvoiceResponse.vat());
@@ -111,7 +98,15 @@ public class ClientInvoiceService {
 				vatAmount,
 				clientInvoiceResponse.currency(),
 				commissionRate,
-				new SupplierId(klientIDField.value()));
+				supplierId);
+	}
+
+	private Optional<SupplierId> parseCustomFieldString(String customFieldString) {
+		if (customFieldString == null || customFieldString.isEmpty()) {
+			return Optional.empty();
+		}
+
+		return Optional.of(new SupplierId(customFieldString));
 	}
 
 	private static Optional<BigDecimal> parsePercentage(String percentageString) throws ParseException {

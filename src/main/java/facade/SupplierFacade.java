@@ -36,7 +36,7 @@ public class SupplierFacade {
 		log.info(response);
 		ObjectMapper objectMapper = new ObjectMapper();
 		SuppliersResponse suppliersResponse = objectMapper.readValue(response, SuppliersResponse.class);
-		List<SupplierResponse> suppliers = suppliersResponse.getSuppliers();
+		List<SupplierResponse> suppliers = suppliersResponse.suppliers();
 		log.info("Suppliers fetched: {}", suppliers);
 		return suppliers;
 	}
