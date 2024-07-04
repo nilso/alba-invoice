@@ -1,5 +1,8 @@
 package app.domain;
 
+import java.util.Optional;
+
+import domain.Supplier;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -14,9 +17,7 @@ public final class ClientInvoiceTableItem {
 	@Setter
 	private String lastSerialNumber;
 	@Setter
-	private String supplierName;
-	@Setter
-	private String supplierId;
+	private Supplier supplier;
 
 	public ClientInvoiceTableItem(
 			String id,
@@ -25,8 +26,7 @@ public final class ClientInvoiceTableItem {
 			double grossPrice,
 			String commissionRate,
 			String lastSerialNumber,
-			String supplierName,
-			String supplierId
+			Supplier supplier
 	) {
 		this.id = id;
 		this.clientName = clientName;
@@ -34,8 +34,7 @@ public final class ClientInvoiceTableItem {
 		this.grossPrice = grossPrice;
 		this.commissionRate = commissionRate;
 		this.lastSerialNumber = lastSerialNumber;
-		this.supplierName = supplierName;
-		this.supplierId = supplierId;
+		this.supplier = supplier;
 	}
 
 	public String id() {
@@ -62,11 +61,7 @@ public final class ClientInvoiceTableItem {
 		return lastSerialNumber;
 	}
 
-	public String supplierName() {
-		return supplierName;
-	}
-
-	public String supplierId() {
-		return supplierId;
+	public Optional<Supplier> supplier() {
+		return Optional.ofNullable(supplier);
 	}
 }

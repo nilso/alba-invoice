@@ -8,7 +8,4 @@ public record UIData(
 		Optional<Supplier> supplier,
 		Optional<SerialNumber> serialNumber
 ) {
-	public UIData withSupplier(Supplier supplier) {
-		return new UIData(clientInvoice, user, Optional.of(supplier), serialNumber);
-	}
 }

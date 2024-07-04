@@ -75,7 +75,7 @@ public class Footer {
 			} else if (item.commissionRate().isEmpty()) {
 				log.warn("Could not find commission rate for item: {}", item);
 				alert("Agentarvode saknas", "Agentarvode måste vara satt", AlertType.ERROR);
-			} else if (item.supplierId().isEmpty()) {
+			} else if (item.supplier().isEmpty()) {
 				log.warn("Could not find supplier for item: {}", item);
 				alert("KlientId saknas", "KlientId måste vara satt", AlertType.ERROR);
 			} else {
@@ -84,7 +84,7 @@ public class Footer {
 				SupplierInvoice supplierInvoice = supplierInvoiceService.createSupplierInvoice(
 						uiData.clientInvoice().withUITableData(commissionRate),
 						currentSerialNumber,
-						uiData.supplier().get(),
+						item.supplier().get(),
 						uiData.user()
 				);
 				SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice);
