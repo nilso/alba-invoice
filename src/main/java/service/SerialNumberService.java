@@ -17,9 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SerialNumberService {
-	private static int nrOfAlreadyIncrementedPrefix;
 	private static final Map<SupplierNameKey, SerialNumber> alreadyCreatedSeries = new HashMap<>();
-
+	private static int nrOfAlreadyIncrementedPrefix;
 	private final SupplierInvoiceFacade supplierInvoiceFacade;
 	private final SupplierService supplierFacade;
 
@@ -98,11 +97,11 @@ public class SerialNumberService {
 	}
 
 	private static SerialNumber createNewSerial(SupplierNameKey supplierName, List<SupplierInvoiceResponse> allSupplierInvoices) {
-		if (allSupplierInvoices.isEmpty()) {
-			if (alreadyCreatedSeries.containsKey(supplierName)) {
-				return alreadyCreatedSeries.get(supplierName);
-			}
+		if (alreadyCreatedSeries.containsKey(supplierName)) {
+			return alreadyCreatedSeries.get(supplierName);
+		}
 
+		if (allSupplierInvoices.isEmpty()) {
 			int newPrefixNumber = 1 + nrOfAlreadyIncrementedPrefix;
 			SerialNumber serialNumber = new SerialNumber("alba" + newPrefixNumber, 0);
 			nrOfAlreadyIncrementedPrefix++;
@@ -124,7 +123,9 @@ public class SerialNumberService {
 		nrOfAlreadyIncrementedPrefix++;
 		int highestNumber = extractAlbaNumber(highestAlba.prefix());
 		String newPrefix = String.format("alba%02d", highestNumber + nrOfAlreadyIncrementedPrefix);
-		return new SerialNumber(newPrefix, 0);
+		SerialNumber serialNumber = new SerialNumber(newPrefix, 0);
+		alreadyCreatedSeries.put(supplierName, serialNumber);
+		return serialNumber;
 	}
 
 	private static SerialNumber getHighestSerialNumber(List<SupplierInvoiceResponse> supplierInvoiceResponses) {

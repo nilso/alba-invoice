@@ -31,8 +31,8 @@ public class Table {
 	private final SupplierService supplierService;
 	private final SerialNumberService serialNumberService;
 
-	public Table(SupplierService supplierService, SerialNumberService serialNumberService) {
-
+	public Table(SupplierService supplierService,
+			SerialNumberService serialNumberService) {
 		this.supplierService = supplierService;
 		this.serialNumberService = serialNumberService;
 	}

@@ -275,14 +275,18 @@ class SerialNumberServiceTest {
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
 				"VAT1234567890");
 
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of());
+		SupplierId supplierId2 = new SupplierId("2");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice2));
 
-		SerialNumber expectedSerialNumber = new SerialNumber("alba1", 0);
+		SerialNumber expectedSerialNumber = new SerialNumber("alba03", 0);
 
-		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
-		assertEquals(expectedSerialNumber, result);
+		Map<SupplierNameKey, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(List.of(supplier));
+		assertEquals(expectedSerialNumber, result.get(new SupplierNameKey(supplier.name())));
 		SerialNumber result2 = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
 		assertEquals(expectedSerialNumber, result2);
+		SerialNumber result3 = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
+		assertEquals(expectedSerialNumber, result3);
 	}
 
 	@Test
