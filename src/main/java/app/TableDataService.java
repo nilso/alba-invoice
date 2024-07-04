@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import app.domain.ClientInvoiceTableItem;
 import config.Config;
@@ -37,7 +38,7 @@ public class TableDataService {
 	Map<InvoiceId, User> usersByInvoiceId;
 	Map<InvoiceId, Supplier> suppliersByInvoiceId;
 	Map<SupplierNameKey, SerialNumber> currentSerialNumbersBySupplierNameKey;
-	List<ClientInvoice> clientInvoices;
+	Map<InvoiceId, ClientInvoice> clientInvoices;
 	List<SupplierInvoiceResponse> supplierInvoiceResponses;
 	int daysBack;
 
@@ -56,15 +57,16 @@ public class TableDataService {
 	}
 
 	public void addCommissionRate(ClientInvoiceTableItem item, BigDecimal commissionRate) {
-		ClientInvoice clientInvoice = clientInvoices.stream()
-				.filter(invoice -> invoice.id().equals(new InvoiceId(invoice.invoiceNr())))
-				.findFirst()
-				.orElseThrow();
+		InvoiceId invoiceId = new InvoiceId(item.id());
+		ClientInvoice clientInvoice = clientInvoices.get(invoiceId);
 
-		clientInvoices.remove(clientInvoice);
-		clientInvoice.withUITableData(commissionRate);
-		clientInvoices.add(clientInvoice);
-		item.setCommissionRate(bigDecimalToPercent(commissionRate));
+		if (clientInvoice != null) {
+			ClientInvoice updatedInvoice = clientInvoice.withUITableData(commissionRate);
+			clientInvoices.put(invoiceId, updatedInvoice);  // Update the map
+			item.setCommissionRate(bigDecimalToPercent(commissionRate));
+		} else {
+			throw new IllegalArgumentException("Invoice with ID " + item.id() + " not found");
+		}
 	}
 
 	public void addSupplier(InvoiceId invoiceId, SupplierId supplierId, ClientInvoiceTableItem item) {
@@ -82,9 +84,9 @@ public class TableDataService {
 	}
 
 	public void init() throws Exception {
-		clientInvoices = clientInvoiceService.getUnprocessedClientInvoices(daysBack);
-		usersByInvoiceId = userService.getUserMap(clientInvoices);
-		suppliersByInvoiceId = supplierService.getSupplierMap(clientInvoices);
+		clientInvoices = clientInvoiceService.getUnprocessedClientInvoices(daysBack).stream().collect(Collectors.toMap(ClientInvoice::id, c -> c));
+		usersByInvoiceId = userService.getUserMap(clientInvoices.values().stream().toList());
+		suppliersByInvoiceId = supplierService.getSupplierMap(clientInvoices.values().stream().toList());
 		supplierInvoiceResponses = supplierInvoiceFacade.fetchInvoicesOneYearBack();
 		currentSerialNumbersBySupplierNameKey = serialNumberService.getCurrentSerialOrNewIfNone(suppliersByInvoiceId.values().stream().toList(),
 				supplierInvoiceResponses);
@@ -94,7 +96,7 @@ public class TableDataService {
 	public Map<InvoiceId, TableData> fetchUIData() {
 		Map<InvoiceId, TableData> uiData = new HashMap<>();
 
-		for (ClientInvoice clientInvoice : clientInvoices) {
+		for (ClientInvoice clientInvoice : clientInvoices.values()) {
 			Optional<Supplier> supplier = Optional.empty();
 			Optional<SerialNumber> currentSerialNumber = Optional.empty();
 			if (suppliersByInvoiceId.containsKey(clientInvoice.id())) {
