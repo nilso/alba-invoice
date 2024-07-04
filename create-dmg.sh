@@ -3,7 +3,6 @@
 # Define variables
 APP_NAME="AlbaInvoice"
 MAIN_JAR="alba-invoice-1.0-SNAPSHOT.jar"
-PATH_TO_FX="/Users/nilost/javafxecho/javafx-sdk-22.0.1/lib"
 MAIN_CLASS="app.FXMain"
 VERSION="1.0"
 

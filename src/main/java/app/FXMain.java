@@ -1,12 +1,6 @@
 package app;
 
-import static app.Table.populateTable;
-
-import java.util.Map;
-
 import app.domain.ClientInvoiceTableItem;
-import domain.InvoiceId;
-import domain.UIData;
 import facade.ClientFacade;
 import facade.ClientInvoiceFacade;
 import facade.PEHttpClient;
@@ -23,7 +17,6 @@ import service.ClientInvoiceService;
 import service.SerialNumberService;
 import service.SupplierInvoiceService;
 import service.SupplierService;
-import service.UIDataService;
 import service.UserService;
 import util.PdfCreator;
 
@@ -40,11 +33,10 @@ public class FXMain extends Application {
 	private static final SupplierInvoiceFacade supplierInvoiceFacade;
 	private static final SupplierInvoiceService supplierInvoiceService;
 	private static final PdfCreator pdfCreator;
-	private static final UIDataService uiDataService;
+	private static final TableDataService tableDataService;
 	private static final Header header;
 	private static final Table table;
 	private static final Footer footer;
-	public static Map<InvoiceId, UIData> uiDataMap;
 
 	static {
 		peHttpClient = new PEHttpClient();
@@ -58,10 +50,10 @@ public class FXMain extends Application {
 		serialNumberService = new SerialNumberService(supplierInvoiceFacade, supplierService);
 		pdfCreator = new PdfCreator();
 		supplierInvoiceService = new SupplierInvoiceService();
-		uiDataService = new UIDataService(clientInvoiceService, userService, supplierService, serialNumberService);
-		header = new Header(uiDataService);
-		footer = new Footer(supplierInvoiceService, pdfCreator);
-		table  = new Table(supplierService, serialNumberService);
+		tableDataService = new TableDataService(clientInvoiceService, userService, supplierService, serialNumberService, supplierInvoiceFacade);
+		footer = new Footer(supplierInvoiceService, pdfCreator, tableDataService);
+		table = new Table(tableDataService);
+		header = new Header(tableDataService, table);
 	}
 
 	public static void main(String[] args) {
@@ -70,11 +62,11 @@ public class FXMain extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		uiDataMap = uiDataService.fetchUIData();
+		tableDataService.init();
 
 		TableView<ClientInvoiceTableItem> tableView = table.createTable();
 
-		populateTable(tableView, uiDataMap.values().stream().toList());
+		table.populateTable();
 
 		Button createInvoiceButton = footer.addCreateInvoiceButton(tableView);
 

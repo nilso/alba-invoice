@@ -36,4 +36,9 @@ public class BigDecimalUtil {
 		double percentValue = Double.parseDouble(percentString);
 		return percentValue / 100;
 	}
+
+	public static BigDecimal doubleToBigDecimal(double value) {
+		return BigDecimal.valueOf(value)
+				.setScale(2, RoundingMode.HALF_UP);
+	}
 }

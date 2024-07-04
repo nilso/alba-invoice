@@ -194,12 +194,11 @@ class SerialNumberServiceTest {
 		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
 		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba01", 1);
 
-		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
+		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier, List.of(invoice1, invoice2));
 		assertEquals(expectedSerialNumber, result);
 	}
 
@@ -236,12 +235,11 @@ class SerialNumberServiceTest {
 		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
 		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba01", 1);
 
-		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
+		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier, List.of(invoice1, invoice2));
 		assertEquals(expectedSerialNumber, result);
 	}
 
@@ -256,11 +254,9 @@ class SerialNumberServiceTest {
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
 				"VAT1234567890");
 
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of());
-
 		SerialNumber expectedSerialNumber3 = new SerialNumber("alba1", 0);
 
-		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier3);
+		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier3, List.of());
 		assertEquals(expectedSerialNumber3, result);
 	}
 
@@ -283,9 +279,9 @@ class SerialNumberServiceTest {
 
 		Map<SupplierNameKey, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(List.of(supplier));
 		assertEquals(expectedSerialNumber, result.get(new SupplierNameKey(supplier.name())));
-		SerialNumber result2 = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
+		SerialNumber result2 = serialNumberService.getCurrentSerialOrNewIfNone(supplier, List.of(invoice2));
 		assertEquals(expectedSerialNumber, result2);
-		SerialNumber result3 = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
+		SerialNumber result3 = serialNumberService.getCurrentSerialOrNewIfNone(supplier, List.of(invoice2));
 		assertEquals(expectedSerialNumber, result3);
 	}
 
@@ -312,11 +308,10 @@ class SerialNumberServiceTest {
 		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(List.of(supplier, supplier2));
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba02", 2);
 
-		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
+		SerialNumber result = serialNumberService.getCurrentSerialOrNewIfNone(supplier, List.of(invoice1, invoice2));
 		assertEquals(expectedSerialNumber, result);
 	}
 }

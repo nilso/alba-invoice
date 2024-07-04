@@ -17,6 +17,6 @@ class ClientInvoiceServiceTest {
 	@Disabled
 	@Test
 	void testGetUnprocessedClientInvoices() throws Exception {
-		System.out.println(clientInvoiceService.getUnprocessedClientInvoices());
+		System.out.println(clientInvoiceService.getUnprocessedClientInvoices(30));
 	}
 }

@@ -143,7 +143,7 @@ public class SerialNumberService {
 
 	private static SerialNumber extractSerialNumber(String input) {
 		if (input == null || !input.contains("-")) {
-			throw new IllegalArgumentException("Input must contain a hyphen (-)");
+			throw new IllegalArgumentException(String.format("Input must contain a hyphen (-) but was %s", input));
 		}
 		String[] parts = input.split("-");
 		String prefix = parts[0];
@@ -155,9 +155,24 @@ public class SerialNumberService {
 		return Integer.parseInt(prefix.replace("alba", ""));
 	}
 
-	public SerialNumber getCurrentSerialOrNewIfNone(Supplier supplier) {
+	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers, List<SupplierInvoiceResponse> allSupplierInvoices) throws Exception {
 		try {
-			List<SupplierInvoiceResponse> allSupplierInvoices = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+			List<Supplier> allSuppliers = supplierFacade.getAllSuppliers();
+
+			Map<SupplierNameKey, List<SupplierId>> supplierIdsByName = mapSuppliersByName(suppliers, allSuppliers);
+
+			Map<SupplierNameKey, List<SupplierInvoiceResponse>> supplierInvoicesByName = mapInvoicesToSuppliers(supplierIdsByName, allSupplierInvoices);
+
+			return mapInvoicesToSerialNumbers(supplierInvoicesByName, allSupplierInvoices);
+
+		} catch (Exception e) {
+			log.error("Failed to fetch supplier invoices: ", e);
+			throw e;
+		}
+	}
+
+	public SerialNumber getCurrentSerialOrNewIfNone(Supplier supplier, List<SupplierInvoiceResponse> allSupplierInvoices) {
+		try {
 			List<Supplier> allSuppliers = supplierFacade.getAllSuppliers();
 
 			List<SupplierId> matchingSupplierId = findMatchingSupplierIdsByName(supplier, allSuppliers);

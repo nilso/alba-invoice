@@ -30,10 +30,6 @@ public class ClientInvoiceService {
 		this.clientFacade = clientFacade;
 	}
 
-	public List<ClientInvoice> getUnprocessedClientInvoices() throws Exception {
-		return getUnprocessedClientInvoices(Config.getDefaultDaysBack());
-	}
-
 	public List<ClientInvoice> getUnprocessedClientInvoices(int daysBack) throws Exception {
 		List<ClientInvoiceResponse> clientInvoiceResponses = clientInvoiceFacade.fetchClientInvoices(daysBack);
 
@@ -44,8 +40,6 @@ public class ClientInvoiceService {
 		//TODO filtrera allt som har länkar till leverantörsfakturor.
 
 		List<ClientInvoice> clientInvoices = clientInvoiceResponses.stream()
-				//				.filter(response -> findCommission(response).isPresent())
-				//				.filter(response -> findSupplierId(response).isPresent())
 				.filter(ClientInvoiceResponse::certified)
 				.map(clientInvoiceResponse -> {
 					try {
@@ -137,7 +131,7 @@ public class ClientInvoiceService {
 		return clientInvoiceResponse.rows().rows().stream()
 				.map(row -> {
 					BigDecimal price = zeroPaddedDoubleToBigDecimal(row.price());
-					BigDecimal vatRate = doubleToBigDecimal(row.vatRate());
+					BigDecimal vatRate = BigDecimalUtil.doubleToBigDecimal(row.vatRate());
 					return new ProductRow(price, vatRate, row.product(), row.description());
 				})
 				.toList();
@@ -149,10 +143,5 @@ public class ClientInvoiceService {
 				clientResponse.vatNumber(),
 				clientResponse.orgNo(),
 				clientResponse.countryCode());
-	}
-
-	private static BigDecimal doubleToBigDecimal(double value) {
-		return BigDecimal.valueOf(value)
-				.setScale(2, RoundingMode.HALF_UP);
 	}
 }

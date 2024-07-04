@@ -1,13 +1,7 @@
 package app;
 
-import static app.Table.repopulateTable;
-
-import java.util.Map;
-
 import app.domain.ClientInvoiceTableItem;
 import config.Config;
-import domain.InvoiceId;
-import domain.UIData;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -18,14 +12,16 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import service.UIDataService;
 
 @Slf4j
 public class Header {
-	private final UIDataService uiDataService;
+	private final TableDataService tableDataService;
+	private final Table table;
 
-	public Header(UIDataService uiDataService) {
-		this.uiDataService = uiDataService;
+	public Header(TableDataService tableDataService,
+			Table table) {
+		this.tableDataService = tableDataService;
+		this.table = table;
 	}
 
 	public VBox getHeader(TableView<ClientInvoiceTableItem> table) {
@@ -50,7 +46,7 @@ public class Header {
 	}
 
 	private void refreshAction(TextField textField,
-			TableView<ClientInvoiceTableItem> table,
+			TableView<ClientInvoiceTableItem> tableView,
 			Button refreshButton,
 			ProgressIndicator progressIndicator) {
 		String input = textField.getText();
@@ -68,15 +64,20 @@ public class Header {
 				// Fetch the data in a new thread to avoid blocking the UI
 				new Thread(() -> {
 					try {
-						Map<InvoiceId, UIData> uiData = uiDataService.fetchUIData(inputValue);
 						Platform.runLater(() -> {
-							repopulateTable(table, uiData.values().stream().toList());
-							enable(refreshButton, textField, progressIndicator, table);
+							try {
+								tableDataService.changeDaysBack(inputValue);
+							} catch (Exception e) {
+								log.warn("Failed to refresh data", e);
+								alert("Något gick fel, kopiera felmeddelandet och spara alba.log", e.getMessage());
+							}
+							table.populateTable();
+							enable(refreshButton, textField, progressIndicator, tableView);
 						});
 					} catch (Exception e) {
 						Platform.runLater(() -> {
 							alert("Något gick fel, kopiera felmeddelandet och spara alba.log", e.getMessage());
-							enable(refreshButton, textField, progressIndicator, table);
+							enable(refreshButton, textField, progressIndicator, tableView);
 						});
 					}
 				}).start();

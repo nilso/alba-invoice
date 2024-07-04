@@ -1,17 +1,13 @@
 package app;
 
-import static app.FXMain.uiDataMap;
-
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import app.domain.ClientInvoiceTableItem;
 import domain.InvoiceId;
-import domain.SerialNumber;
 import domain.SupplierInvoice;
 import domain.SupplierInvoiceRequest;
-import domain.UIData;
+import domain.TableData;
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
@@ -27,11 +23,14 @@ public class Footer {
 
 	private final SupplierInvoiceService supplierInvoiceService;
 	private final PdfCreator pdfCreator;
+	private final TableDataService tableDataService;
 
 	public Footer(SupplierInvoiceService supplierInvoiceService,
-			PdfCreator pdfCreator) {
+			PdfCreator pdfCreator,
+			TableDataService tableDataService) {
 		this.supplierInvoiceService = supplierInvoiceService;
 		this.pdfCreator = pdfCreator;
+		this.tableDataService = tableDataService;
 	}
 
 	public Button addCreateInvoiceButton(TableView<ClientInvoiceTableItem> table) {
@@ -67,29 +66,32 @@ public class Footer {
 		List<String> fileNames = new ArrayList<>();
 		items.forEach(item -> {
 			log.info("Creating invoice for item: {}", item);
-
-			UIData uiData = uiDataMap.get(new InvoiceId(item.id()));
-			if (item.lastSerialNumber().isEmpty()) {
-				log.warn("Could not find serial number for item: {}", item);
-				alert("Löpnr saknas", "Löpnr måste vara satt", AlertType.ERROR);
-			} else if (item.commissionRate().isEmpty()) {
-				log.warn("Could not find commission rate for item: {}", item);
-				alert("Agentarvode saknas", "Agentarvode måste vara satt", AlertType.ERROR);
-			} else if (item.supplier().isEmpty()) {
-				log.warn("Could not find supplier for item: {}", item);
-				alert("KlientId saknas", "KlientId måste vara satt", AlertType.ERROR);
-			} else {
-				BigDecimal commissionRate = new BigDecimal(item.commissionRate());
-				SerialNumber currentSerialNumber = serialNumberFromTable(item.lastSerialNumber());
-				SupplierInvoice supplierInvoice = supplierInvoiceService.createSupplierInvoice(
-						uiData.clientInvoice().withUITableData(commissionRate),
-						currentSerialNumber,
-						item.supplier().get(),
-						uiData.user()
-				);
-				SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice);
-				fileNames.add(file.filename());
-				table.getItems().remove(item);
+			TableData tableData;
+			try {
+				tableData = tableDataService.fetchUIData().get(new InvoiceId(item.id()));
+				if (tableData.serialNumber().isEmpty()) {
+					log.warn("Could not find serial number for item: {}", item);
+					alert("Löpnr saknas", "Löpnr måste vara satt", AlertType.ERROR);
+				} else if (tableData.clientInvoice().commissionRate().isEmpty()) {
+					log.warn("Could not find commission rate for item: {}", item);
+					alert("Agentarvode saknas", "Agentarvode måste vara satt", AlertType.ERROR);
+				} else if (tableData.supplier().isEmpty()) {
+					log.warn("Could not find supplier for item: {}", item);
+					alert("KlientId saknas", "KlientId måste vara satt", AlertType.ERROR);
+				} else {
+					SupplierInvoice supplierInvoice = supplierInvoiceService.createSupplierInvoice(
+							tableData.clientInvoice(),
+							tableData.serialNumber().get(),
+							tableData.supplier().get(),
+							tableData.user()
+					);
+					SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice);
+					fileNames.add(file.filename());
+					table.getItems().remove(item);
+				}
+			} catch (Exception e) {
+				log.error("Failed to fetch UIData for item: {}", item, e);
+				alert("Fel", "Kunde inte hämta data för faktura", AlertType.ERROR);
 			}
 		});
 
@@ -108,14 +110,4 @@ public class Footer {
 		alert.setContentText(message);
 		alert.showAndWait();
 	}
-
-	public SerialNumber serialNumberFromTable(String input) {
-		if (input == null || !input.contains("-")) {
-			throw new IllegalArgumentException("Input must contain a hyphen (-)");
-		}
-
-		String[] parts = input.split("-");
-		return new SerialNumber(parts[0], Integer.parseInt(parts[1]));
-	}
-
 }

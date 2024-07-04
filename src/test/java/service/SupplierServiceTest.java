@@ -1,13 +1,11 @@
 package service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -49,11 +47,10 @@ class SupplierServiceTest {
 				.build().aResponse();
 		when(supplierFacade.fetchSupplier(any())).thenReturn(supplierResponse);
 
-		Map<InvoiceId, Optional<Supplier>> supplierMap = supplierService.getSupplierMap(List.of(clientInvoice));
+		Map<InvoiceId, Supplier> supplierMap = supplierService.getSupplierMap(List.of(clientInvoice));
 
 		assertEquals(1, supplierMap.size());
-		assertTrue(supplierMap.get(new InvoiceId(invoiceNr)).isPresent());
-		Supplier result = supplierMap.get(new InvoiceId(invoiceNr)).get();
+		Supplier result = supplierMap.get(new InvoiceId(invoiceNr));
 		assertEquals("Bankgiro", result.paymentMethod().name());
 		assertEquals(bankGiroNumberExpected, result.paymentMethod().number());
 	}

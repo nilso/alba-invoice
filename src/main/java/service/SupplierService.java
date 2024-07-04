@@ -23,18 +23,17 @@ public class SupplierService {
 		this.supplierFacade = supplierFacade;
 	}
 
-	public Map<InvoiceId, Optional<Supplier>> getSupplierMap(List<ClientInvoice> clientInvoices) {
-		Map<InvoiceId, Optional<Supplier>> supplierMap = new HashMap<>();
+	public Map<InvoiceId, Supplier> getSupplierMap(List<ClientInvoice> clientInvoices) {
+		Map<InvoiceId, Supplier> supplierMap = new HashMap<>();
 
 		clientInvoices.forEach(invoice -> {
 			if (invoice.supplierId().isEmpty()) {
-				supplierMap.put(invoice.id(), Optional.empty());
 				return;
 			}
 
 			try {
 				SupplierResponse supplierResponse = supplierFacade.fetchSupplier(invoice.supplierId().get());
-				supplierMap.put(invoice.id(), Optional.of(mapSupplier(supplierResponse)));
+				supplierMap.put(invoice.id(), mapSupplier(supplierResponse));
 			} catch (Exception e) {
 				log.error("Failed to fetch supplier for invoice: {}", invoice, e);
 			}

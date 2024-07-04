@@ -2,7 +2,7 @@ package domain;
 
 import java.util.Optional;
 
-public record UIData(
+public record TableData(
 		ClientInvoice clientInvoice,
 		User user,
 		Optional<Supplier> supplier,
