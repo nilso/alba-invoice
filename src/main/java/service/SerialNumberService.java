@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SerialNumberService {
-	private static final Map<SupplierNameKey, SerialNumber> alreadyCreatedSeries = new HashMap<>();
+	private static Map<SupplierNameKey, SerialNumber> alreadyCreatedSeries;
 	private static int nrOfAlreadyIncrementedPrefix;
 	private final SupplierInvoiceFacade supplierInvoiceFacade;
 	private final SupplierService supplierFacade;
@@ -27,6 +27,7 @@ public class SerialNumberService {
 		this.supplierInvoiceFacade = supplierInvoiceFacade;
 		this.supplierFacade = supplierFacade;
 		nrOfAlreadyIncrementedPrefix = 0;
+		alreadyCreatedSeries = new HashMap<>();
 	}
 
 	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers) throws Exception {
