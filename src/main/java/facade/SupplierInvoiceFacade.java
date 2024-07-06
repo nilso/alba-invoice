@@ -29,12 +29,9 @@ public class SupplierInvoiceFacade {
 	}
 
 	public List<SupplierInvoiceResponse> fetchInvoicesOneYearBack() throws Exception {
-
 		LocalDate oneYearAgo = getOneYearBack();
-		LocalDate today = LocalDate.now();
-
 		log.info("Fetching supplier invoices one year back: {}", oneYearAgo);
-				String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s&endInvoiceDate=%s", Config.getClientId(), oneYearAgo, today);
+				String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), oneYearAgo);
 
 		String body = peHttpClient.httpGet(endpoint);
 
