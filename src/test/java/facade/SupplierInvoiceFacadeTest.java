@@ -1,12 +1,10 @@
 package facade;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -43,6 +41,16 @@ class SupplierInvoiceFacadeTest {
 	void actuallyFetch() throws Exception {
 		PEHttpClient realClient = new PEHttpClient();
 		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient);
-		realFacade.fetchInvoicesOneYearBack();
+		List<SupplierInvoiceResponse> supplierInvoiceResponses = realFacade.fetchInvoicesOneYearBack().stream().filter(invoice -> invoice.supplierRef().supplierId().equals(new SupplierId("271909"))).toList();
+		System.out.println("Found this many: " + supplierInvoiceResponses.size());
+		System.out.println("Found these: " + supplierInvoiceResponses);
+	}
+
+	@Disabled
+	@Test
+	void actuallyFetchById() throws Exception {
+		PEHttpClient realClient = new PEHttpClient();
+		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient);
+		System.out.println(realFacade.fetchInvoiceById("2218090"));
 	}
 }

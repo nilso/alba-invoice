@@ -34,6 +34,8 @@ public class SupplierResponseTestBuilder {
 	String vatNr = "SE1234567890";
 	@Builder.Default
 	String ourReference = "OurReference";
+	@Builder.Default
+	SupplierResponse.BankAccount bankAccount = new SupplierResponse.BankAccount(new BankAccountId("1"));
 
 	public SupplierResponse aResponse() {
 		return new SupplierResponse(id,
@@ -50,6 +52,7 @@ public class SupplierResponseTestBuilder {
 				norwegianBankAccount,
 				iban,
 				vatNr,
-				ourReference);
+				ourReference,
+				bankAccount);
 	}
 }

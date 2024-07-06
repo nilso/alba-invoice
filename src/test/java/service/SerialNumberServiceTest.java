@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import domain.Address;
+import domain.BankAccountId;
 import domain.PaymentMethod;
 import domain.SerialNumber;
 import domain.Supplier;
@@ -47,7 +48,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		SupplierId supplierId2 = new SupplierId("2");
 		Supplier supplier2 = new Supplier(supplierId2,
 				"SE",
@@ -55,11 +57,12 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier, supplier2);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
 		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
@@ -81,7 +84,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 
 		SupplierId supplierId2 = new SupplierId("2");
 		Supplier supplier2 = new Supplier(supplierId2,
@@ -90,7 +94,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 
 		SupplierId supplierId3 = new SupplierId("3");
 		Supplier supplier3 = new Supplier(supplierId3,
@@ -99,11 +104,12 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier, supplier2, supplier3);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
 		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
@@ -127,7 +133,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 
 		List<Supplier> suppliers = List.of(supplier3);
 
@@ -148,7 +155,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		SupplierId supplierId2 = new SupplierId("2");
 		Supplier supplier2 = new Supplier(supplierId2,
 				"SE",
@@ -156,11 +164,12 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(List.of(supplier, supplier2));
 		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
@@ -180,7 +189,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		SupplierId supplierId2 = new SupplierId("2");
 		Supplier supplier2 = new Supplier(supplierId2,
 				"SE",
@@ -188,11 +198,12 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier, supplier2);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
 
@@ -211,7 +222,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 
 		SupplierId supplierId2 = new SupplierId("2");
 		Supplier supplier2 = new Supplier(supplierId2,
@@ -220,7 +232,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 
 		SupplierId supplierId3 = new SupplierId("3");
 		Supplier supplier3 = new Supplier(supplierId3,
@@ -229,11 +242,12 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier, supplier2, supplier3);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
 
@@ -252,7 +266,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 
 		SerialNumber expectedSerialNumber3 = new SerialNumber("alba1", 0);
 
@@ -269,10 +284,11 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 
 		SupplierId supplierId2 = new SupplierId("2");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice2));
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba03", 0);
@@ -294,7 +310,8 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 		SupplierId supplierId2 = new SupplierId("2");
 		Supplier supplier2 = new Supplier(supplierId2,
 				"SE",
@@ -302,10 +319,11 @@ class SerialNumberServiceTest {
 				"Klientens namn",
 				new PaymentMethod("Bankgiro", "12455", Optional.empty(), Optional.empty()),
 				new Address("Gatan", "", "12346", "Staden", "Landet"),
-				"VAT1234567890");
+				"VAT1234567890",
+				Optional.of(new BankAccountId("1")));
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse(new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
+		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(List.of(supplier, supplier2));
 

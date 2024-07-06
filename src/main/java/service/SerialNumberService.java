@@ -20,20 +20,94 @@ public class SerialNumberService {
 	private static Map<SupplierNameKey, SerialNumber> alreadyCreatedSeries;
 	private static int nrOfAlreadyIncrementedPrefix;
 	private final SupplierInvoiceFacade supplierInvoiceFacade;
-	private final SupplierService supplierFacade;
+	private final SupplierService supplierService;
 
 	public SerialNumberService(SupplierInvoiceFacade supplierInvoiceFacade,
-			SupplierService supplierFacade) {
+			SupplierService supplierService) {
 		this.supplierInvoiceFacade = supplierInvoiceFacade;
-		this.supplierFacade = supplierFacade;
+		this.supplierService = supplierService;
 		nrOfAlreadyIncrementedPrefix = 0;
 		alreadyCreatedSeries = new HashMap<>();
+	}
+
+	private static SerialNumber getHighestSerialNumber(List<SupplierInvoiceResponse> supplierInvoiceResponses) {
+		List<SerialNumber> serialNumbers = supplierInvoiceResponses.stream()
+				.map(SupplierInvoiceResponse::serialNumber)
+				.map(SerialNumberService::extractSerialNumber)
+				.toList();
+
+		return serialNumbers.stream()
+				.max(Comparator.comparingInt(SerialNumber::suffix))
+				.map(sn -> new SerialNumber(sn.prefix(), sn.suffix()))
+				.orElseThrow(() -> new IllegalArgumentException("Unable to find SerialNumber with the largest suffix"));
+	}
+
+	private static SerialNumber extractSerialNumber(String input) {
+		if (!isValidSerialNumber(input)) {
+			throw new IllegalArgumentException(String.format("Input must contain a hyphen (-) but was %s", input));
+		}
+
+		String[] parts = input.split("-");
+		String prefix = parts[0];
+		Integer suffix = Integer.parseInt(parts[1]);
+		return new SerialNumber(prefix, suffix);
+	}
+
+	private static boolean isAlbaSerial(String input) {
+		return input.contains("alba");
+	}
+
+	private static boolean isValidSerialNumber(String serialNumber) {
+		return serialNumber != null && serialNumber.contains("-");
+	}
+
+	private static int extractAlbaNumber(String prefix) {
+		return Integer.parseInt(prefix.replace("alba", ""));
+	}
+
+	private SerialNumber createNewSerial(SupplierNameKey supplierName,
+			List<SupplierInvoiceResponse> allSupplierInvoices) {
+		if (alreadyCreatedSeries.containsKey(supplierName)) {
+			return alreadyCreatedSeries.get(supplierName);
+		}
+
+		allSupplierInvoices = allSupplierInvoices.stream()
+				.filter(invoice -> isValidSerialNumber(invoice.serialNumber()))
+				.filter(invoice -> isAlbaSerial(invoice.serialNumber()))
+				.peek(invoice -> log.info("Found serial number: {} for klientId {} ", invoice.serialNumber(), invoice.supplierRef().supplierId()))
+				.collect(Collectors.toList());
+
+		if (allSupplierInvoices.isEmpty()) {
+			int newPrefixNumber = 1 + nrOfAlreadyIncrementedPrefix;
+			SerialNumber serialNumber = new SerialNumber("alba" + newPrefixNumber, 0);
+			nrOfAlreadyIncrementedPrefix++;
+			alreadyCreatedSeries.put(supplierName, serialNumber);
+			return serialNumber;
+		}
+
+		List<SerialNumber> serialNumbers = allSupplierInvoices.stream()
+				.map(invoice -> extractSerialNumber(invoice.serialNumber()))
+				.sorted((sn1, sn2) -> {
+					Integer num2 = extractAlbaNumber(sn2.prefix());
+					Integer num1 = extractAlbaNumber(sn1.prefix());
+					return num2.compareTo(num1);
+				})
+				.toList();
+
+		SerialNumber highestAlba = serialNumbers.getFirst();
+
+		nrOfAlreadyIncrementedPrefix++;
+		int highestNumber = extractAlbaNumber(highestAlba.prefix());
+		String newPrefix = String.format("alba%02d", highestNumber + nrOfAlreadyIncrementedPrefix);
+		SerialNumber serialNumber = new SerialNumber(newPrefix, 0);
+		alreadyCreatedSeries.put(supplierName, serialNumber);
+		return serialNumber;
 	}
 
 	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers) throws Exception {
 		try {
 			List<SupplierInvoiceResponse> allSupplierInvoices = supplierInvoiceFacade.fetchInvoicesOneYearBack();
-			List<Supplier> allSuppliers = supplierFacade.getAllSuppliers();
+			List<Supplier> allSuppliers = supplierService.getAllSuppliers();
 
 			Map<SupplierNameKey, List<SupplierId>> supplierIdsByName = mapSuppliersByName(suppliers, allSuppliers);
 
@@ -97,67 +171,9 @@ public class SerialNumberService {
 		return serialNumberMap;
 	}
 
-	private static SerialNumber createNewSerial(SupplierNameKey supplierName, List<SupplierInvoiceResponse> allSupplierInvoices) {
-		if (alreadyCreatedSeries.containsKey(supplierName)) {
-			return alreadyCreatedSeries.get(supplierName);
-		}
-
-		if (allSupplierInvoices.isEmpty()) {
-			int newPrefixNumber = 1 + nrOfAlreadyIncrementedPrefix;
-			SerialNumber serialNumber = new SerialNumber("alba" + newPrefixNumber, 0);
-			nrOfAlreadyIncrementedPrefix++;
-			alreadyCreatedSeries.put(supplierName, serialNumber);
-			return serialNumber;
-		}
-
-		List<SerialNumber> serialNumbers = allSupplierInvoices.stream()
-				.map(invoice -> extractSerialNumber(invoice.serialNumber()))
-				.sorted((sn1, sn2) -> {
-					Integer num2 = extractAlbaNumber(sn2.prefix());
-					Integer num1 = extractAlbaNumber(sn1.prefix());
-					return num2.compareTo(num1);
-				})
-				.toList();
-
-		SerialNumber highestAlba = serialNumbers.getFirst();
-
-		nrOfAlreadyIncrementedPrefix++;
-		int highestNumber = extractAlbaNumber(highestAlba.prefix());
-		String newPrefix = String.format("alba%02d", highestNumber + nrOfAlreadyIncrementedPrefix);
-		SerialNumber serialNumber = new SerialNumber(newPrefix, 0);
-		alreadyCreatedSeries.put(supplierName, serialNumber);
-		return serialNumber;
-	}
-
-	private static SerialNumber getHighestSerialNumber(List<SupplierInvoiceResponse> supplierInvoiceResponses) {
-		List<SerialNumber> serialNumbers = supplierInvoiceResponses.stream()
-				.map(SupplierInvoiceResponse::serialNumber)
-				.map(SerialNumberService::extractSerialNumber)
-				.toList();
-
-		return serialNumbers.stream()
-				.max(Comparator.comparingInt(SerialNumber::suffix))
-				.map(sn -> new SerialNumber(sn.prefix(), sn.suffix()))
-				.orElseThrow(() -> new IllegalArgumentException("Unable to find SerialNumber with the largest suffix"));
-	}
-
-	private static SerialNumber extractSerialNumber(String input) {
-		if (input == null || !input.contains("-")) {
-			throw new IllegalArgumentException(String.format("Input must contain a hyphen (-) but was %s", input));
-		}
-		String[] parts = input.split("-");
-		String prefix = parts[0];
-		Integer suffix = Integer.parseInt(parts[1]);
-		return new SerialNumber(prefix, suffix);
-	}
-
-	private static int extractAlbaNumber(String prefix) {
-		return Integer.parseInt(prefix.replace("alba", ""));
-	}
-
 	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers, List<SupplierInvoiceResponse> allSupplierInvoices) throws Exception {
 		try {
-			List<Supplier> allSuppliers = supplierFacade.getAllSuppliers();
+			List<Supplier> allSuppliers = supplierService.getAllSuppliers();
 
 			Map<SupplierNameKey, List<SupplierId>> supplierIdsByName = mapSuppliersByName(suppliers, allSuppliers);
 
@@ -173,7 +189,7 @@ public class SerialNumberService {
 
 	public SerialNumber getCurrentSerialOrNewIfNone(Supplier supplier, List<SupplierInvoiceResponse> allSupplierInvoices) {
 		try {
-			List<Supplier> allSuppliers = supplierFacade.getAllSuppliers();
+			List<Supplier> allSuppliers = supplierService.getAllSuppliers();
 
 			List<SupplierId> matchingSupplierId = findMatchingSupplierIdsByName(supplier, allSuppliers);
 

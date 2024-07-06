@@ -31,8 +31,10 @@ public class SupplierInvoiceFacade {
 	public List<SupplierInvoiceResponse> fetchInvoicesOneYearBack() throws Exception {
 
 		LocalDate oneYearAgo = getOneYearBack();
+		LocalDate today = LocalDate.now();
+
 		log.info("Fetching supplier invoices one year back: {}", oneYearAgo);
-		String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s", Config.getClientId(), oneYearAgo);
+				String endpoint = String.format("/company/%s/supplier/invoice?offset=0&limit=1000&startInvoiceDate=%s&endInvoiceDate=%s", Config.getClientId(), oneYearAgo, today);
 
 		String body = peHttpClient.httpGet(endpoint);
 
@@ -49,6 +51,21 @@ public class SupplierInvoiceFacade {
 	public static LocalDate getOneYearBack() {
 		LocalDate today = LocalDate.now();
 		return today.minusYears(1);
+	}
+
+	public List<SupplierInvoiceResponse> fetchInvoiceById(String id) throws Exception {
+		String endpoint = String.format("/company/%s/supplier/invoice/%s", Config.getClientId(), id);
+
+		String body = peHttpClient.httpGet(endpoint);
+
+		SupplierInvoicesResponse supplierInvoicesResponse = objectMapper.readValue(body, SupplierInvoicesResponse.class);
+		if (supplierInvoicesResponse.size() == 0) {
+			log.info("No supplier invoices found for id: {}", id);
+			return List.of();
+		}
+
+		log.info("Fetched supplierInvoice: {} for id: {}", supplierInvoicesResponse, id);
+		return supplierInvoicesResponse.supplierInvoiceResponses();
 	}
 
 	public void sendInvoiceToPE(SupplierInvoice supplierInvoice, SupplierInvoiceRequest.File file) throws Exception {

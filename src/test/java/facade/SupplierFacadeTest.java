@@ -20,6 +20,6 @@ class SupplierFacadeTest {
 	@Test
 	void fetchSupplierById() {
 		SupplierFacade supplierFacade = new SupplierFacade(new PEHttpClient());
-		assertDoesNotThrow(() -> supplierFacade.fetchSupplier(new SupplierId(324059)));
+		assertDoesNotThrow(() -> supplierFacade.fetchSupplier(new SupplierId(199953)));
 	}
 }

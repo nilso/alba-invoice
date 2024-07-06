@@ -18,6 +18,7 @@ import domain.ClientInvoice;
 import domain.ClientInvoiceTestBuilder;
 import domain.InvoiceId;
 import domain.Supplier;
+import domain.SupplierId;
 import domain.SupplierResponse;
 import domain.SupplierResponseTestBuilder;
 import facade.PEHttpClient;
@@ -61,5 +62,13 @@ class SupplierServiceTest {
 		PEHttpClient peHttpClient = new PEHttpClient();
 		SupplierService supplierService = new SupplierService(new SupplierFacade(peHttpClient));
 		System.out.println(supplierService.getAllSuppliers());
+	}
+
+	@Disabled
+	@Test
+	void fetchSupplierById() {
+		PEHttpClient peHttpClient = new PEHttpClient();
+		SupplierService supplierService = new SupplierService(new SupplierFacade(peHttpClient));
+		System.out.println(supplierService.getSupplier(new SupplierId(199953)));
 	}
 }

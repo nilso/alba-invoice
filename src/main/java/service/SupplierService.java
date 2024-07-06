@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import domain.BankAccountId;
 import domain.ClientInvoice;
 import domain.InvoiceId;
 import domain.PaymentMethod;
@@ -45,13 +46,21 @@ public class SupplierService {
 	private Supplier mapSupplier(SupplierResponse resp) {
 		log.info("Mapping supplier: {}", resp);
 		PaymentMethod paymentMethod = findPaymentMethod(resp);
+		Optional<BankAccountId> bankAccountId;
+		if (resp.bankAccount() != null) {
+			bankAccountId = Optional.of(resp.bankAccount().bankAccountId());
+		} else {
+			bankAccountId = Optional.empty();
+		}
+
 		return new Supplier(resp.id(),
 				resp.countryCode(),
 				resp.name(),
 				resp.ourReference(),
 				paymentMethod,
 				resp.address(),
-				resp.vatNr());
+				resp.vatNr(),
+				bankAccountId);
 	}
 
 	private PaymentMethod findPaymentMethod(SupplierResponse resp) {
@@ -65,6 +74,8 @@ public class SupplierService {
 			return createIban(resp);
 		} else if (resp.internationalBankAccountWithRouting() != null && !resp.internationalBankAccountWithRouting().isEmpty()) {
 			return new PaymentMethod("Bankkonto", resp.internationalBankAccountWithRouting(), Optional.empty(), Optional.empty());
+		} else if (resp.internationalBankAccountWithAccountNumber() != null && !resp.internationalBankAccountWithAccountNumber().isEmpty()) {
+			return createInternationalBankAccountWithAccountNumber(resp);
 		} else {
 			log.info("No payment method found for supplier: {}", resp);
 			return new PaymentMethod("", "", Optional.empty(), Optional.empty());
@@ -86,6 +97,12 @@ public class SupplierService {
 	public PaymentMethod createIban(SupplierResponse supplierResponse) {
 		String iban = getIban(supplierResponse.iban());
 		String bic = getBic(supplierResponse.iban());
+		return new PaymentMethod("BIC", bic, Optional.of("IBAN"), Optional.of(iban));
+	}
+
+	public PaymentMethod createInternationalBankAccountWithAccountNumber(SupplierResponse supplierResponse) {
+		String iban = getIban(supplierResponse.internationalBankAccountWithAccountNumber());
+		String bic = getBic(supplierResponse.internationalBankAccountWithAccountNumber());
 		return new PaymentMethod("BIC", bic, Optional.of("IBAN"), Optional.of(iban));
 	}
 

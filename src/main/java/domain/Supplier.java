@@ -1,5 +1,9 @@
 package domain;
 
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+
 public record Supplier(
 		SupplierId id,
 		String countryCode,
@@ -7,6 +11,7 @@ public record Supplier(
 		String supplierReference,
 		PaymentMethod paymentMethod,
 		Address address,
-		String vatNr
+		String vatNr,
+		Optional<BankAccountId> bankAccountId
 ) {
 }

@@ -1,13 +1,15 @@
 package util;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import domain.BankAccount;
+import domain.BankAccountId;
 import domain.Supplier;
+import facade.BankAccountFacade;
 import facade.PEHttpClient;
 import facade.SupplierFacade;
 import service.SupplierService;
@@ -16,24 +18,16 @@ class SupplierExcelTest {
 
 	@Disabled
 	@Test
-	void createWithRealData() {
-		//Util
+	void createWithRealData() throws Exception {
 		PEHttpClient peHttpClient = new PEHttpClient();
 		SupplierExcel excel = new SupplierExcel();
-
-		//Facade
+		BankAccountFacade bankAccountFacade = new BankAccountFacade(peHttpClient);
 		SupplierFacade supplierFacade = new SupplierFacade(peHttpClient);
-
-		//Service
 		SupplierService supplierService = new SupplierService(supplierFacade);
 
-		try {
-			List<Supplier> allSupplier = supplierService.getAllSuppliers();
-			excel.createExcelFile(allSupplier);
-
-		} catch (Exception e) {
-			fail("Failed to create excel file: " + e);
-		}
+		List<Supplier> allSupplier = supplierService.getAllSuppliers();
+		Map<BankAccountId, BankAccount> bankAccountResponseById = bankAccountFacade.fetchBankAccounts();
+		excel.createExcelFile(allSupplier, bankAccountResponseById);
 	}
 
 }

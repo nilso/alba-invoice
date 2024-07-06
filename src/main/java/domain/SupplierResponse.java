@@ -22,6 +22,9 @@ public record SupplierResponse(
 		@JsonProperty("norwegian-bank-account") String norwegianBankAccount,
 		String iban,
 		@JsonProperty("vat-nr") String vatNr,
-		@JsonProperty("our-reference") String ourReference
+		@JsonProperty("our-reference") String ourReference,
+		@JsonProperty("bank-account") BankAccount bankAccount
 ) {
+	public record BankAccount(@JsonProperty("id") BankAccountId bankAccountId) {
+	}
 }
