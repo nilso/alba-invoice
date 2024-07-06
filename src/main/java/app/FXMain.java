@@ -1,6 +1,7 @@
 package app;
 
 import app.domain.ClientInvoiceTableItem;
+import facade.BankAccountFacade;
 import facade.ClientFacade;
 import facade.ClientInvoiceFacade;
 import facade.PEHttpClient;
@@ -14,17 +15,20 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import service.ClientInvoiceService;
+import service.SupplierIdDocumentService;
 import service.SerialNumberService;
 import service.SupplierInvoiceService;
 import service.SupplierService;
 import service.UserService;
 import util.PdfCreator;
+import util.SupplierIdDocumentCreator;
 
 @Slf4j
 public class FXMain extends Application {
 	private static final PEHttpClient peHttpClient;
 	private static final ClientInvoiceFacade clientInvoiceFacade;
 	private static final ClientFacade clientFacade;
+	private static final BankAccountFacade bankAccountFacade;
 	private static final UserService userService;
 	private static final ClientInvoiceService clientInvoiceService;
 	private static final SupplierFacade supplierFacade;
@@ -33,7 +37,9 @@ public class FXMain extends Application {
 	private static final SupplierInvoiceFacade supplierInvoiceFacade;
 	private static final SupplierInvoiceService supplierInvoiceService;
 	private static final PdfCreator pdfCreator;
+	private static final SupplierIdDocumentCreator supplierIdDocumentCreator;
 	private static final TableDataService tableDataService;
+	private static final SupplierIdDocumentService supplierIdDocumentService;
 	private static final Header header;
 	private static final Table table;
 	private static final Footer footer;
@@ -42,18 +48,23 @@ public class FXMain extends Application {
 		peHttpClient = new PEHttpClient();
 		clientInvoiceFacade = new ClientInvoiceFacade(peHttpClient);
 		clientFacade = new ClientFacade(peHttpClient);
+		bankAccountFacade = new BankAccountFacade(peHttpClient);
 		userService = new UserService(peHttpClient);
+
 		clientInvoiceService = new ClientInvoiceService(clientInvoiceFacade, clientFacade);
 		supplierFacade = new SupplierFacade(peHttpClient);
 		supplierService = new SupplierService(supplierFacade);
 		supplierInvoiceFacade = new SupplierInvoiceFacade(peHttpClient);
 		serialNumberService = new SerialNumberService(supplierInvoiceFacade, supplierService);
+		supplierIdDocumentCreator = new SupplierIdDocumentCreator();
+		supplierIdDocumentService = new SupplierIdDocumentService(supplierService, bankAccountFacade, supplierIdDocumentCreator);
 		pdfCreator = new PdfCreator();
 		supplierInvoiceService = new SupplierInvoiceService();
 		tableDataService = new TableDataService(clientInvoiceService, userService, supplierService, serialNumberService, supplierInvoiceFacade);
+
 		footer = new Footer(supplierInvoiceService, pdfCreator, tableDataService);
 		table = new Table(tableDataService);
-		header = new Header(tableDataService, table);
+		header = new Header(tableDataService, table, supplierIdDocumentService);
 	}
 
 	public static void main(String[] args) {

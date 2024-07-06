@@ -19,12 +19,12 @@ import domain.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SupplierExcel {
+public class SupplierIdDocumentCreator {
 
 	String FILE_NAME = "klientId";
 	String FILE_SUFFIX = ".xlsx";
 
-	public void createExcelFile(List<Supplier> suppliers, Map<BankAccountId, BankAccount> bankAccounts) {
+	public String createExcelFile(List<Supplier> suppliers, Map<BankAccountId, BankAccount> bankAccounts) {
 		log.info("Creating Excel file for suppliers: {}", suppliers);
 		try (Workbook workbook = new XSSFWorkbook()) {
 			Sheet sheet = workbook.createSheet("klientIdn");
@@ -34,7 +34,7 @@ public class SupplierExcel {
 			for (Supplier supplier : suppliers) {
 				try {
 					BankAccount bankAccount;
-					if(supplier.bankAccountId().isPresent()) {
+					if (supplier.bankAccountId().isPresent()) {
 						bankAccount = bankAccounts.get(supplier.bankAccountId().get());
 					} else {
 						bankAccount = new BankAccount(new BankAccountId("0"), "SEK", "No bank account found");
@@ -59,8 +59,10 @@ public class SupplierExcel {
 			try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
 				workbook.write(fileOut);
 			}
+
+			return filePath;
 		} catch (IOException e) {
-			log.error("failed creating excel: " + e);
+			throw new RuntimeException("Failed creating excel", e);
 		}
 	}
 

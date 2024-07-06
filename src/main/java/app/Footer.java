@@ -13,6 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import lombok.extern.slf4j.Slf4j;
 import service.SupplierInvoiceService;
@@ -86,7 +87,7 @@ public class Footer {
 							tableData.user()
 					);
 					SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice);
-					fileNames.add(file.filename());
+					fileNames.add(file.filePath());
 					table.getItems().remove(item);
 				}
 			} catch (Exception e) {
@@ -107,7 +108,10 @@ public class Footer {
 		Alert alert = new Alert(type);
 		alert.setTitle(title);
 		alert.setHeaderText(null);
-		alert.setContentText(message);
+		Label label = new Label(message);
+		label.setWrapText(false);
+		label.setMaxWidth(1000);
+		alert.getDialogPane().setContent(label);
 		alert.showAndWait();
 	}
 }

@@ -32,7 +32,7 @@ public record SupplierInvoiceRequest(
 	public record Files(List<File> files) {
 	}
 
-	public record File(String filename, int[] data) {
+	public record File(String filePath, int[] data) {
 	}
 
 	public record DepositAccount(String type, String nr) {

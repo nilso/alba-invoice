@@ -14,13 +14,13 @@ import facade.PEHttpClient;
 import facade.SupplierFacade;
 import service.SupplierService;
 
-class SupplierExcelTest {
+class SupplierIdDocumentCreatorTest {
 
 	@Disabled
 	@Test
 	void createWithRealData() throws Exception {
 		PEHttpClient peHttpClient = new PEHttpClient();
-		SupplierExcel excel = new SupplierExcel();
+		SupplierIdDocumentCreator excel = new SupplierIdDocumentCreator();
 		BankAccountFacade bankAccountFacade = new BankAccountFacade(peHttpClient);
 		SupplierFacade supplierFacade = new SupplierFacade(peHttpClient);
 		SupplierService supplierService = new SupplierService(supplierFacade);

@@ -75,7 +75,7 @@ public class PdfCreator {
 				Files.createDirectories(path);
 			}
 			document.save(filePath);
-			return new SupplierInvoiceRequest.File(fileName, convertPdfToIntArray(document));
+			return new SupplierInvoiceRequest.File(filePath, convertPdfToIntArray(document));
 		} catch (IOException e) {
 			log.error("An error occurred while trying to read the PDF: ", e);
 			throw new RuntimeException(e);
