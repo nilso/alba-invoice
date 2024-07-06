@@ -22,6 +22,8 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.StringConverter;
+import javafx.util.converter.DefaultStringConverter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -78,7 +80,7 @@ public class Table {
 	private TableColumn<ClientInvoiceTableItem, String> createCommissionRateColumn() {
 		TableColumn<ClientInvoiceTableItem, String> commissionRateColumn = new TableColumn<>("Agentarvode %");
 		commissionRateColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().commissionRate()));
-		commissionRateColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+		commissionRateColumn.setCellFactory(column -> new CustomEditableTextFieldTableCell(new DefaultStringConverter()));
 		commissionRateColumn.setOnEditCommit(event -> {
 			ClientInvoiceTableItem item = event.getRowValue();
 
@@ -115,13 +117,18 @@ public class Table {
 
 	private TableColumn<ClientInvoiceTableItem, String> createSupplierIdTable() {
 		TableColumn<ClientInvoiceTableItem, String> supplierIdColumn = new TableColumn<>("KlientId");
+
+		// Set the custom cell factory
+		supplierIdColumn.setCellFactory(column -> new CustomEditableTextFieldTableCell(new DefaultStringConverter()));
+
 		supplierIdColumn.setCellValueFactory(data -> {
 			if (data.getValue().supplier().isEmpty()) {
 				return new SimpleStringProperty("");
 			}
 			return new SimpleStringProperty(data.getValue().supplier().get().id().getId());
 		});
-		supplierIdColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+
+		// Set the on edit commit action
 		supplierIdColumn.setOnEditCommit(event -> {
 			ClientInvoiceTableItem item = event.getRowValue();
 			String newValue = event.getNewValue();
@@ -137,8 +144,8 @@ public class Table {
 						String.format("Lyckades inte hitta löpnummer för klient med KlientId : %s", newValue));
 			}
 			table.refresh();
-
 		});
+
 		supplierIdColumn.setMinWidth(100);
 		return supplierIdColumn;
 	}
@@ -194,5 +201,28 @@ public class Table {
 				fullSerialNumber,
 				supplier
 		);
+	}
+}
+
+class CustomEditableTextFieldTableCell extends TextFieldTableCell<ClientInvoiceTableItem, String> {
+	public CustomEditableTextFieldTableCell(StringConverter<String> converter) {
+		super(converter);
+	}
+
+	@Override
+	public void updateItem(String item, boolean empty) {
+		super.updateItem(item, empty);
+		if (item == null || empty) {
+			setText(null);
+			setStyle("");
+		} else {
+			setText(item);
+			// Apply the red background if the item's value is an empty string
+			if (item.isEmpty()) {
+				setStyle("-fx-background-color: pink;");
+			} else {
+				setStyle("");
+			}
+		}
 	}
 }
