@@ -18,7 +18,7 @@ import domain.SupplierId;
 import domain.SupplierInvoiceResponse;
 
 @ExtendWith(MockitoExtension.class)
-class SupplierInvoiceFacadeTest {
+class SupplierInvoiceDataFacadeTest {
 	@Mock
 	private PEHttpClient peHttpClient;
 	@InjectMocks

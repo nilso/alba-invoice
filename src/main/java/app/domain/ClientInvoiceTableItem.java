@@ -12,6 +12,7 @@ public final class ClientInvoiceTableItem {
 	private final String invoiceNr;
 	private final double grossPrice;
 	private final String clientName;
+	private final String supplierInvoiceReference;
 	@Setter
 	private String commissionRate;
 	@Setter
@@ -26,7 +27,8 @@ public final class ClientInvoiceTableItem {
 			double grossPrice,
 			String commissionRate,
 			String lastSerialNumber,
-			Supplier supplier
+			Supplier supplier,
+			String supplierInvoiceReference
 	) {
 		this.id = id;
 		this.clientName = clientName;
@@ -35,6 +37,7 @@ public final class ClientInvoiceTableItem {
 		this.commissionRate = commissionRate;
 		this.lastSerialNumber = lastSerialNumber;
 		this.supplier = supplier;
+		this.supplierInvoiceReference = supplierInvoiceReference;
 	}
 
 	public String id() {
@@ -63,5 +66,9 @@ public final class ClientInvoiceTableItem {
 
 	public Optional<Supplier> supplier() {
 		return Optional.ofNullable(supplier);
+	}
+
+	public Optional<String> supplierInvoiceReference() {
+		return Optional.ofNullable(supplierInvoiceReference);
 	}
 }

@@ -7,13 +7,13 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
-import config.Config;
 import domain.Client;
 import domain.ClientInvoice;
 import domain.ClientInvoiceResponse;
 import domain.ClientResponse;
 import domain.Field;
 import domain.ProductRow;
+import domain.SerialNumber;
 import domain.SupplierId;
 import facade.ClientFacade;
 import facade.ClientInvoiceFacade;
@@ -64,7 +64,7 @@ public class ClientInvoiceService {
 				.findFirst()
 				.orElseThrow(() -> new RuntimeException("No supplier ID found"));
 
-		Optional<SupplierId> supplierId = parseCustomFieldString(klientIDField.value());
+		Optional<SupplierId> supplierId = parseSupplierId(klientIDField.value());
 		Optional<BigDecimal> commissionRate = parsePercentage(agentarvodeField.value());
 		BigDecimal netPrice = zeroPaddedDoubleToBigDecimal(clientInvoiceResponse.amount());
 		BigDecimal vatAmount = zeroPaddedDoubleToBigDecimal(clientInvoiceResponse.vat());
@@ -95,7 +95,7 @@ public class ClientInvoiceService {
 				supplierId);
 	}
 
-	private Optional<SupplierId> parseCustomFieldString(String customFieldString) {
+	private Optional<SupplierId> parseSupplierId(String customFieldString) {
 		if (customFieldString == null || customFieldString.isEmpty()) {
 			return Optional.empty();
 		}
@@ -118,6 +118,14 @@ public class ClientInvoiceService {
 
 		// Convert the number to a decimal representation of the percentage
 		return Optional.of(bigDecimal.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP));
+	}
+
+	private Optional<String> parseSerialNumber(String customFieldString) {
+		if (customFieldString == null || customFieldString.isEmpty()) {
+			return Optional.empty();
+		}
+
+		return Optional.of(customFieldString);
 	}
 
 	private static BigDecimal zeroPaddedDoubleToBigDecimal(double value) {

@@ -46,6 +46,7 @@ public class Header {
 		Button createSupplierIdDocumentButton = createSupplierIdDocumentButton();
 		createSupplierIdDocumentButton.setOnAction(event -> {
 			try {
+				log.info("Creating supplier id document");
 				String filePath = supplierIdDocumentService.createSupplierIdDocument();
 				alert("Filen är skapad", filePath, AlertType.INFORMATION);
 			} catch (Exception e) {

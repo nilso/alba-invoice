@@ -15,13 +15,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import domain.Address;
 import domain.BankAccountId;
+import domain.InvoiceId;
 import domain.PaymentMethod;
 import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierId;
-import domain.SupplierInvoiceResponse;
+import domain.SupplierInvoice;
 import domain.SupplierNameKey;
-import facade.SupplierInvoiceFacade;
 
 @ExtendWith(MockitoExtension.class)
 class SerialNumberServiceTest {
@@ -29,14 +29,14 @@ class SerialNumberServiceTest {
 	private SerialNumberService serialNumberService;
 
 	@Mock
-	private SupplierInvoiceFacade supplierInvoiceFacade;
+	private SupplierInvoiceService supplierInvoiceService;
 
 	@Mock
 	private SupplierService supplierService;
 
 	@BeforeEach
 	void setUp() {
-		serialNumberService = new SerialNumberService(supplierInvoiceFacade, supplierService);
+		serialNumberService = new SerialNumberService(supplierInvoiceService, supplierService);
 	}
 
 	@Test
@@ -61,10 +61,10 @@ class SerialNumberServiceTest {
 				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier, supplier2);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoice invoice1 = aSupplierInvoiceResponse();
+		SupplierInvoice invoice2 = aSupplierInvoiceResponse("2", supplierId2, "alba02-02");
 
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
+		when(supplierInvoiceService.getAllSupplierInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba01", 1);
@@ -73,6 +73,14 @@ class SerialNumberServiceTest {
 		Map<SupplierNameKey, SerialNumber> result = serialNumberService.getCurrentSerialOrNewIfNone(suppliers);
 		assertEquals(expectedSerialNumber, result.get(new SupplierNameKey(supplier.name())));
 		assertEquals(expectedSerialNumber2, result.get(new SupplierNameKey(supplier2.name())));
+	}
+
+	private SupplierInvoice aSupplierInvoiceResponse() {
+		return aSupplierInvoiceResponse("1", new SupplierId("1"), "alba01-01");
+	}
+
+	private SupplierInvoice aSupplierInvoiceResponse(String id, SupplierId supplierId, String serialNumber) {
+		return new SupplierInvoice(new InvoiceId(id), supplierId, serialNumber, new InvoiceId("1"));
 	}
 
 	@Test
@@ -108,10 +116,10 @@ class SerialNumberServiceTest {
 				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier, supplier2, supplier3);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoice invoice1 = aSupplierInvoiceResponse();
+		SupplierInvoice invoice2 = aSupplierInvoiceResponse("2", supplierId2, "alba02-02");
 
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
+		when(supplierInvoiceService.getAllSupplierInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba01", 1);
@@ -138,7 +146,7 @@ class SerialNumberServiceTest {
 
 		List<Supplier> suppliers = List.of(supplier3);
 
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of());
+		when(supplierInvoiceService.getAllSupplierInvoicesOneYearBack()).thenReturn(List.of());
 
 		SerialNumber expectedSerialNumber3 = new SerialNumber("alba1", 0);
 
@@ -168,11 +176,11 @@ class SerialNumberServiceTest {
 				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoice invoice1 = aSupplierInvoiceResponse();
+		SupplierInvoice invoice2 = aSupplierInvoiceResponse("2", supplierId2, "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(List.of(supplier, supplier2));
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
+		when(supplierInvoiceService.getAllSupplierInvoicesOneYearBack()).thenReturn(List.of(invoice1, invoice2));
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba02", 2);
 
@@ -202,8 +210,8 @@ class SerialNumberServiceTest {
 				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier, supplier2);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoice invoice1 = aSupplierInvoiceResponse();
+		SupplierInvoice invoice2 = aSupplierInvoiceResponse("2", supplierId2, "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
 
@@ -246,8 +254,8 @@ class SerialNumberServiceTest {
 				Optional.of(new BankAccountId("1")));
 		List<Supplier> suppliers = List.of(supplier, supplier2, supplier3);
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoice invoice1 = aSupplierInvoiceResponse();
+		SupplierInvoice invoice2 = aSupplierInvoiceResponse("2", supplierId2, "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(suppliers);
 
@@ -288,8 +296,8 @@ class SerialNumberServiceTest {
 				Optional.of(new BankAccountId("1")));
 
 		SupplierId supplierId2 = new SupplierId("2");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
-		when(supplierInvoiceFacade.fetchInvoicesOneYearBack()).thenReturn(List.of(invoice2));
+		SupplierInvoice invoice2 = aSupplierInvoiceResponse("1", supplierId2, "alba02-02");
+		when(supplierInvoiceService.getAllSupplierInvoicesOneYearBack()).thenReturn(List.of(invoice2));
 
 		SerialNumber expectedSerialNumber = new SerialNumber("alba03", 0);
 
@@ -322,8 +330,8 @@ class SerialNumberServiceTest {
 				"VAT1234567890",
 				Optional.of(new BankAccountId("1")));
 
-		SupplierInvoiceResponse invoice1 = new SupplierInvoiceResponse("1", new SupplierInvoiceResponse.SupplierRef(supplierId), "alba01-01");
-		SupplierInvoiceResponse invoice2 = new SupplierInvoiceResponse("2", new SupplierInvoiceResponse.SupplierRef(supplierId2), "alba02-02");
+		SupplierInvoice invoice1 = aSupplierInvoiceResponse();
+		SupplierInvoice invoice2 = aSupplierInvoiceResponse("2", supplierId2, "alba02-02");
 
 		when(supplierService.getAllSuppliers()).thenReturn(List.of(supplier, supplier2));
 

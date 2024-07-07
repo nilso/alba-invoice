@@ -17,24 +17,26 @@ import domain.PaymentMethod;
 import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierInvoice;
+import domain.SupplierInvoiceData;
+import domain.SupplierInvoiceResponse;
 import domain.SupplierNameKey;
 import domain.User;
 import domain.VatInformationTexts;
+import facade.SupplierInvoiceFacade;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SupplierInvoiceService {
 
 	private static final Map<SupplierNameKey, Integer> supplierInvoiceCounter = new HashMap<>();
+	private final SupplierInvoiceFacade supplierInvoiceFacade;
 
-	public SupplierInvoiceService() {
+	public SupplierInvoiceService(SupplierInvoiceFacade supplierInvoiceFacade) {
+		this.supplierInvoiceFacade = supplierInvoiceFacade;
 		supplierInvoiceCounter.clear();
 	}
 
-	public SupplierInvoice createSupplierInvoice(ClientInvoice clientInvoice,
-			SerialNumber currentSerialNumber,
-			Supplier supplier,
-			User user) {
+	public SupplierInvoiceData createSupplierInvoiceData(ClientInvoice clientInvoice, SerialNumber currentSerialNumber, Supplier supplier, User user) {
 
 		String newSerialNumber = createSerialNumber(currentSerialNumber, supplier.name());
 		return mapSupplierInvoice(clientInvoice, supplier, user, newSerialNumber);
@@ -47,13 +49,12 @@ public class SupplierInvoiceService {
 		return newSerialNumber.prefix() + "-" + newSerialNumber.suffix();
 	}
 
-	private static SupplierInvoice mapSupplierInvoice(ClientInvoice clientInvoice, Supplier supplier, User user, String newSerialNumber) {
+	private static SupplierInvoiceData mapSupplierInvoice(ClientInvoice clientInvoice, Supplier supplier, User user, String newSerialNumber) {
 		PaymentMethod paymentMethod = supplier.paymentMethod();
 
 		VatInformationTexts vatVatInformationTexts = createVatInformationText(clientInvoice.client(), supplier);
 
-		log.info("Calculating commission with net amount: {}, commission rate: {}, supplier country code: {}",
-				clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
+		log.info("Calculating commission with net amount: {}, commission rate: {}, supplier country code: {}", clientInvoice.netPrice(), clientInvoice.commissionRate(), supplier.countryCode());
 
 		if (clientInvoice.commissionRate().isEmpty()) {
 			throw new IllegalArgumentException("Commission rate is missing for client invoice: " + clientInvoice.id());
@@ -65,16 +66,7 @@ public class SupplierInvoiceService {
 
 		BigDecimal amountDue = calculateAmountDue(clientInvoice, commission);
 
-		return new SupplierInvoice(mapClientInfo(clientInvoice),
-				mapSupplierInfo(supplier),
-				clientInvoice.invoiceDate(),
-				clientInvoice.dueDate(),
-				invoiceAmounts,
-				user,
-				newSerialNumber,
-				paymentMethod,
-				amountDue,
-				commission,
+		return new SupplierInvoiceData(mapClientInfo(clientInvoice), mapSupplierInfo(supplier), clientInvoice.invoiceDate(), clientInvoice.dueDate(), invoiceAmounts, user, newSerialNumber, paymentMethod, amountDue, commission,
 				vatVatInformationTexts);
 	}
 
@@ -82,29 +74,29 @@ public class SupplierInvoiceService {
 		return clientInvoice.grossPrice().subtract(commission.grossCommission().add(commission.commissionRoundingAmount().orElse(BigDecimal.ZERO).negate()));
 	}
 
-	private static SupplierInvoice.ClientInfo mapClientInfo(ClientInvoice clientInvoice) {
-		return new SupplierInvoice.ClientInfo(
-				clientInvoice.client().name(),
-				clientInvoice.invoiceAddress(),
-				clientInvoice.client().countryCode(),
-				clientInvoice.client().orgNo(),
-				clientInvoice.client().vatNumber(),
+	private static SupplierInvoiceData.ClientInfo mapClientInfo(ClientInvoice clientInvoice) {
+		return new SupplierInvoiceData.ClientInfo(clientInvoice.client().name(), clientInvoice.invoiceAddress(), clientInvoice.client().countryCode(), clientInvoice.client().orgNo(), clientInvoice.client().vatNumber(),
 				clientInvoice.invoiceNr());
 	}
 
-	private static SupplierInvoice.SupplierInfo mapSupplierInfo(Supplier supplier) {
-		return new SupplierInvoice.SupplierInfo(supplier.id(),
-				supplier.name(),
-				supplier.address(),
-				supplier.supplierReference(),
-				supplier.vatNr(),
-				supplier.countryCode());
+	private static SupplierInvoiceData.SupplierInfo mapSupplierInfo(Supplier supplier) {
+		return new SupplierInvoiceData.SupplierInfo(supplier.id(), supplier.name(), supplier.address(), supplier.supplierReference(), supplier.vatNr(), supplier.countryCode());
 	}
 
-	public List<SupplierInvoice> createSupplierInvoices(List<ClientInvoice> clientInvoices,
-			Map<SupplierNameKey, SerialNumber> currentSerialNumbers,
-			Map<InvoiceId, Supplier> supplierMap,
-			Map<InvoiceId, User> userMap) {
+	public List<SupplierInvoice> getAllSupplierInvoicesOneYearBack() throws Exception {
+		List<SupplierInvoiceResponse> supplierInvoiceResponses = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+
+		//TODO clean this up.
+		return supplierInvoiceResponses.stream().map(supplierInvoiceResponse -> {
+			if (supplierInvoiceResponse.clientInvoiceIds() == null) {
+				return new SupplierInvoice(supplierInvoiceResponse.id(), supplierInvoiceResponse.supplierRef().supplierId(), supplierInvoiceResponse.serialNumber(), null);
+			}
+			InvoiceId supplierInvoiceReference = supplierInvoiceResponse.clientInvoiceIds().clientInvoiceReference().stream().findFirst().orElse(null);
+			return new SupplierInvoice(supplierInvoiceResponse.id(), supplierInvoiceResponse.supplierRef().supplierId(), supplierInvoiceResponse.serialNumber(), supplierInvoiceReference);
+		}).toList();
+	}
+
+	public List<SupplierInvoiceData> createSupplierInvoices(List<ClientInvoice> clientInvoices, Map<SupplierNameKey, SerialNumber> currentSerialNumbers, Map<InvoiceId, Supplier> supplierMap, Map<InvoiceId, User> userMap) {
 		return clientInvoices.stream().map(clientInvoice -> {
 			User user = userMap.get(clientInvoice.id());
 			Supplier supplier = supplierMap.get(clientInvoice.id());

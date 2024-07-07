@@ -16,14 +16,14 @@ import domain.InvoiceId;
 import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierId;
-import domain.SupplierInvoiceResponse;
+import domain.SupplierInvoice;
 import domain.SupplierNameKey;
 import domain.TableData;
 import domain.User;
-import facade.SupplierInvoiceFacade;
 import lombok.extern.slf4j.Slf4j;
 import service.ClientInvoiceService;
 import service.SerialNumberService;
+import service.SupplierInvoiceService;
 import service.SupplierService;
 import service.UserService;
 
@@ -34,25 +34,25 @@ public class TableDataService {
 	private final UserService userService;
 	private final SupplierService supplierService;
 	private final SerialNumberService serialNumberService;
-	private final SupplierInvoiceFacade supplierInvoiceFacade;
+	private final SupplierInvoiceService supplierInvoiceService;
 	Map<InvoiceId, User> usersByInvoiceId;
 	Map<InvoiceId, Supplier> suppliersByInvoiceId;
 	Map<SupplierNameKey, SerialNumber> currentSerialNumbersBySupplierNameKey;
 	Map<InvoiceId, ClientInvoice> clientInvoices;
-	List<SupplierInvoiceResponse> supplierInvoiceResponses;
+	List<SupplierInvoice> supplierInvoices;
 	int daysBack;
 
 	public TableDataService(ClientInvoiceService clientInvoiceService,
 			UserService userService,
 			SupplierService supplierService,
 			SerialNumberService serialNumberService,
-			SupplierInvoiceFacade supplierInvoiceFacade) {
+			SupplierInvoiceService supplierInvoiceService) {
 
 		this.clientInvoiceService = clientInvoiceService;
 		this.userService = userService;
 		this.supplierService = supplierService;
 		this.serialNumberService = serialNumberService;
-		this.supplierInvoiceFacade = supplierInvoiceFacade;
+		this.supplierInvoiceService = supplierInvoiceService;
 		daysBack = Config.getDefaultDaysBack();
 	}
 
@@ -72,7 +72,7 @@ public class TableDataService {
 	public void addSupplier(InvoiceId invoiceId, SupplierId supplierId, ClientInvoiceTableItem item) {
 		Supplier supplier = supplierService.getSupplier(supplierId);
 		suppliersByInvoiceId.put(invoiceId, supplier);
-		SerialNumber serialNumber = serialNumberService.getCurrentSerialOrNewIfNone(supplier, supplierInvoiceResponses);
+		SerialNumber serialNumber = serialNumberService.getCurrentSerialOrNewIfNone(supplier, supplierInvoices);
 		currentSerialNumbersBySupplierNameKey.put(new SupplierNameKey(supplier.name()), serialNumber);
 		item.setSupplier(supplier);
 		item.setLastSerialNumber(serialNumber.fullSerialNumber());
@@ -87,9 +87,9 @@ public class TableDataService {
 		clientInvoices = clientInvoiceService.getUnprocessedClientInvoices(daysBack).stream().collect(Collectors.toMap(ClientInvoice::id, c -> c));
 		usersByInvoiceId = userService.getUserMap(clientInvoices.values().stream().toList());
 		suppliersByInvoiceId = supplierService.getSupplierMap(clientInvoices.values().stream().toList());
-		supplierInvoiceResponses = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+		supplierInvoices = supplierInvoiceService.getAllSupplierInvoicesOneYearBack();
 		currentSerialNumbersBySupplierNameKey = serialNumberService.getCurrentSerialOrNewIfNone(suppliersByInvoiceId.values().stream().toList(),
-				supplierInvoiceResponses);
+				supplierInvoices);
 
 	}
 
@@ -113,5 +113,14 @@ public class TableDataService {
 		}
 
 		return uiData;
+	}
+
+	public String getSupplierInvoiceReference(InvoiceId clientInvoiceId) {
+		return supplierInvoices.stream()
+				.filter(supplierInvoice -> supplierInvoice.clientInvoiceReference().isPresent()
+						&& supplierInvoice.clientInvoiceReference().get().equals(clientInvoiceId))
+				.findFirst()
+				.map(SupplierInvoice::serialNumber)
+				.orElse("");
 	}
 }

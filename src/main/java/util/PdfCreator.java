@@ -22,7 +22,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import domain.Address;
 import domain.InvoiceAmounts;
 import domain.PaymentMethod;
-import domain.SupplierInvoice;
+import domain.SupplierInvoiceData;
 import domain.SupplierInvoiceRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,9 +37,9 @@ public class PdfCreator {
 
 	}
 
-	public SupplierInvoiceRequest.File createPdf(SupplierInvoice supplierInvoice) {
+	public SupplierInvoiceRequest.File createPdf(SupplierInvoiceData supplierInvoiceData) {
 		InputStream pdfStream;
-		SETemplate = supplierInvoice.supplierInfo().countryCode().equals("SE");
+		SETemplate = supplierInvoiceData.supplierInfo().countryCode().equals("SE");
 
 		if (SETemplate) {
 			pdfStream = Objects.requireNonNull(getClass().getResourceAsStream(SE_TEMPLATE));
@@ -50,10 +50,10 @@ public class PdfCreator {
 		try (PDDocument document = PDDocument.load(pdfStream)) {
 			PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 			if (acroForm != null) {
-				writeSupplierSection(acroForm, supplierInvoice);
-				writeInvoiceSection(acroForm, supplierInvoice);
-				writeSummarySection(acroForm, supplierInvoice);
-				writeRows(acroForm, supplierInvoice);
+				writeSupplierSection(acroForm, supplierInvoiceData);
+				writeInvoiceSection(acroForm, supplierInvoiceData);
+				writeSummarySection(acroForm, supplierInvoiceData);
+				writeRows(acroForm, supplierInvoiceData);
 			} else {
 				log.info("No form fields found.");
 			}
@@ -63,9 +63,9 @@ public class PdfCreator {
 			String fileName;
 
 			if (SETemplate) {
-				fileName = "Självfaktura " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierInfo().reference() + FILE_SUFFIX;
+				fileName = "Självfaktura " + supplierInvoiceData.serialNumber() + ", " + supplierInvoiceData.supplierInfo().reference() + FILE_SUFFIX;
 			} else {
-				fileName = "Self-billing invoice " + supplierInvoice.serialNumber() + ", " + supplierInvoice.supplierInfo().reference() + FILE_SUFFIX;
+				fileName = "Self-billing invoice " + supplierInvoiceData.serialNumber() + ", " + supplierInvoiceData.supplierInfo().reference() + FILE_SUFFIX;
 			}
 
 			String directory = homeDir + "/Documents/" + dateString;
@@ -82,8 +82,8 @@ public class PdfCreator {
 		}
 	}
 
-	private static void writeSupplierSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
-		SupplierInvoice.SupplierInfo supplierInfo = supplierInvoice.supplierInfo();
+	private static void writeSupplierSection(PDAcroForm acroForm, SupplierInvoiceData supplierInvoiceData) throws IOException {
+		SupplierInvoiceData.SupplierInfo supplierInfo = supplierInvoiceData.supplierInfo();
 		Address address = supplierInfo.address();
 		PDField supplierNameField = acroForm.getField("f_supplierName");
 		supplierNameField.setValue(supplierInfo.name());
@@ -98,24 +98,24 @@ public class PdfCreator {
 		supplierReference.setValue(supplierInfo.reference());
 
 		PDField agentName = acroForm.getField("f_agentName");
-		agentName.setValue(supplierInvoice.agent().name());
+		agentName.setValue(supplierInvoiceData.agent().name());
 
 		PDField supplierVatNr = acroForm.getField("f_supplierVatNr");
 		supplierVatNr.setValue(supplierInfo.vatNr());
 
 	}
 
-	private static void writeInvoiceSection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
+	private static void writeInvoiceSection(PDAcroForm acroForm, SupplierInvoiceData supplierInvoiceData) throws IOException {
 		PDField invoiceDateField = acroForm.getField("f_invoiceDate");
-		invoiceDateField.setValue(supplierInvoice.invoiceDate());
+		invoiceDateField.setValue(supplierInvoiceData.invoiceDate());
 
 		PDField dueDateField = acroForm.getField("f_dueDate");
-		dueDateField.setValue(supplierInvoice.dueDate());
+		dueDateField.setValue(supplierInvoiceData.dueDate());
 
 		PDField serialNumberField = acroForm.getField("f_serialNumber");
-		serialNumberField.setValue(supplierInvoice.serialNumber());
+		serialNumberField.setValue(supplierInvoiceData.serialNumber());
 
-		PaymentMethod paymentMethod = supplierInvoice.paymentMethod();
+		PaymentMethod paymentMethod = supplierInvoiceData.paymentMethod();
 
 		PDField paymentMethodField = acroForm.getField("f_paymentMethod");
 		paymentMethodField.setValue(paymentMethod.name());
@@ -123,7 +123,7 @@ public class PdfCreator {
 		PDField paymentNumberField = acroForm.getField("f_paymentNumber");
 		paymentNumberField.setValue(paymentMethod.number());
 
-		if (supplierInvoice.paymentMethod().additionalPaymentMethod().isPresent() && supplierInvoice.paymentMethod().additionalNumber().isPresent()) {
+		if (supplierInvoiceData.paymentMethod().additionalPaymentMethod().isPresent() && supplierInvoiceData.paymentMethod().additionalNumber().isPresent()) {
 			PDField paymentMethodAdditional = acroForm.getField("f_paymentMethodAdditional");
 			paymentMethodAdditional.setValue(paymentMethod.additionalPaymentMethod().get());
 
@@ -133,11 +133,11 @@ public class PdfCreator {
 		}
 	}
 
-	private static void writeSummarySection(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
-		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
+	private static void writeSummarySection(PDAcroForm acroForm, SupplierInvoiceData supplierInvoiceData) throws IOException {
+		InvoiceAmounts invoiceAmounts = supplierInvoiceData.invoiceAmounts();
 		String vatRateInPercent = bigDecimalToPercent(invoiceAmounts.vatRate());
-		String commissionVatRateInPercent = bigDecimalToPercent(supplierInvoice.commission().commissionVatRate());
-		String commissionRateInPercent = bigDecimalToPercent(supplierInvoice.commission().commissionRate());
+		String commissionVatRateInPercent = bigDecimalToPercent(supplierInvoiceData.commission().commissionVatRate());
+		String commissionRateInPercent = bigDecimalToPercent(supplierInvoiceData.commission().commissionRate());
 
 		PDField priceCurrencyField = acroForm.getField("f_priceCurrency");
 		priceCurrencyField.setValue("A-pris " + invoiceAmounts.currency());
@@ -158,7 +158,7 @@ public class PdfCreator {
 		netPriceField.setValue(invoiceAmounts.netPrice().toString());
 
 		PDField vatField = acroForm.getField("f_vat");
-		vatField.setValue(supplierInvoice.invoiceAmounts().vatAmount().toString());
+		vatField.setValue(supplierInvoiceData.invoiceAmounts().vatAmount().toString());
 
 		PDField grossPriceField = acroForm.getField("f_grossPrice");
 		grossPriceField.setValue(invoiceAmounts.grossPriceRounded().toString());
@@ -181,15 +181,15 @@ public class PdfCreator {
 		commissionRateField.setValue(commissionRateInPercent + "%");
 
 		PDField netCommissionField = acroForm.getField("f_netCommission");
-		netCommissionField.setValue(supplierInvoice.commission().netCommission().negate().toString());
+		netCommissionField.setValue(supplierInvoiceData.commission().netCommission().negate().toString());
 
 		PDField commissionVatField = acroForm.getField("f_commissionVat");
-		commissionVatField.setValue(supplierInvoice.commission().commissionVatAmount().negate().toString());
+		commissionVatField.setValue(supplierInvoiceData.commission().commissionVatAmount().negate().toString());
 
 		PDField grossCommissionField = acroForm.getField("f_grossCommission");
-		grossCommissionField.setValue(supplierInvoice.commission().grossCommission().negate().toString());
+		grossCommissionField.setValue(supplierInvoiceData.commission().grossCommission().negate().toString());
 
-		if (supplierInvoice.commission().commissionRoundingAmount().isPresent()) {
+		if (supplierInvoiceData.commission().commissionRoundingAmount().isPresent()) {
 			PDField commissionRoundingTextField = acroForm.getField("f_commissionRoundingText");
 			if (SETemplate) {
 				commissionRoundingTextField.setValue("Öresavrundning");
@@ -198,24 +198,24 @@ public class PdfCreator {
 			}
 
 			PDField commissionRoundingAmountField = acroForm.getField("f_commissionRoundingAmount");
-			commissionRoundingAmountField.setValue(supplierInvoice.commission().commissionRoundingAmount().get().toString());
+			commissionRoundingAmountField.setValue(supplierInvoiceData.commission().commissionRoundingAmount().get().toString());
 		}
 
-		if (supplierInvoice.vatInformationTexts().supplierVatInformationText().isPresent()) {
+		if (supplierInvoiceData.vatInformationTexts().supplierVatInformationText().isPresent()) {
 			PDField reversedVatInformationTextField = acroForm.getField("f_reversedVatInformationText");
-			reversedVatInformationTextField.setValue(supplierInvoice.vatInformationTexts().supplierVatInformationText().get());
+			reversedVatInformationTextField.setValue(supplierInvoiceData.vatInformationTexts().supplierVatInformationText().get());
 		}
 
 		PDField amountDueCurrencyField = acroForm.getField("f_amountDueCurrency");
 		amountDueCurrencyField.setValue(invoiceAmounts.currency());
 
 		PDField amountDueField = acroForm.getField("f_amountDue");
-		amountDueField.setValue(supplierInvoice.amountDue().toString());
+		amountDueField.setValue(supplierInvoiceData.amountDue().toString());
 	}
 
-	private static void writeRows(PDAcroForm acroForm, SupplierInvoice supplierInvoice) throws IOException {
-		SupplierInvoice.ClientInfo clientInfo = supplierInvoice.clientInfo();
-		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
+	private static void writeRows(PDAcroForm acroForm, SupplierInvoiceData supplierInvoiceData) throws IOException {
+		SupplierInvoiceData.ClientInfo clientInfo = supplierInvoiceData.clientInfo();
+		InvoiceAmounts invoiceAmounts = supplierInvoiceData.invoiceAmounts();
 		AtomicInteger rowNo = new AtomicInteger();
 		invoiceAmounts.productRows().forEach(productRow -> {
 			try {
@@ -295,9 +295,9 @@ public class PdfCreator {
 				clientInvoiceNumberField.setValue("Invoice reference Albatros: " + clientInfo.invoiceNr());
 			}
 
-			if (supplierInvoice.vatInformationTexts().clientVatInformationText().isPresent()) {
+			if (supplierInvoiceData.vatInformationTexts().clientVatInformationText().isPresent()) {
 				PDField vatInformationTextField = acroForm.getField("f_vatInformationText");
-				vatInformationTextField.setValue(supplierInvoice.vatInformationTexts().clientVatInformationText().get());
+				vatInformationTextField.setValue(supplierInvoiceData.vatInformationTexts().clientVatInformationText().get());
 			}
 
 		} catch (IOException e) {

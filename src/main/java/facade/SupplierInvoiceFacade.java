@@ -11,7 +11,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import config.Config;
 import domain.InvoiceAmounts;
-import domain.SupplierInvoice;
+import domain.SupplierInvoiceData;
 import domain.SupplierInvoiceRequest;
 import domain.SupplierInvoiceRequest.DepositAccount;
 import domain.SupplierInvoiceResponse;
@@ -65,45 +65,45 @@ public class SupplierInvoiceFacade {
 		return supplierInvoicesResponse.supplierInvoiceResponses();
 	}
 
-	public void sendInvoiceToPE(SupplierInvoice supplierInvoice, SupplierInvoiceRequest.File file) throws Exception {
+	public void sendInvoiceToPE(SupplierInvoiceData supplierInvoiceData, SupplierInvoiceRequest.File file) throws Exception {
 		objectMapper.registerModule(new JavaTimeModule());
 
 		String endpoint = String.format("/company/%s/supplier/invoice", Config.getClientId());
-		String request = objectMapper.writeValueAsString(mapSupplierInvoiceRequest(supplierInvoice, file));
-		log.info("Sending supplier invoice to PE: {}", supplierInvoice);
+		String request = objectMapper.writeValueAsString(mapSupplierInvoiceRequest(supplierInvoiceData, file));
+		log.info("Sending supplier invoice to PE: {}", supplierInvoiceData);
 		peHttpClient.httpPut(endpoint,
 				request);
 	}
 
-	private SupplierInvoiceRequest mapSupplierInvoiceRequest(SupplierInvoice supplierInvoice, SupplierInvoiceRequest.File file) {
-		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
-		DepositAccount depositAccount = mapDepositAccount(supplierInvoice);
-		return new SupplierInvoiceRequest(supplierInvoice.serialNumber(),
-				new SupplierInvoiceRequest.Id(Integer.parseInt(supplierInvoice.supplierInfo().id().getId())),
+	private SupplierInvoiceRequest mapSupplierInvoiceRequest(SupplierInvoiceData supplierInvoiceData, SupplierInvoiceRequest.File file) {
+		InvoiceAmounts invoiceAmounts = supplierInvoiceData.invoiceAmounts();
+		DepositAccount depositAccount = mapDepositAccount(supplierInvoiceData);
+		return new SupplierInvoiceRequest(supplierInvoiceData.serialNumber(),
+				new SupplierInvoiceRequest.Id(Integer.parseInt(supplierInvoiceData.supplierInfo().id().getId())),
 				new SupplierInvoiceRequest.Id(92446), //TODO
-				supplierInvoice.agent().name(),
+				supplierInvoiceData.agent().name(),
 				depositAccount,
-				supplierInvoice.invoiceDate(),
-				supplierInvoice.dueDate(),
-				supplierInvoice.dueDate(), //TODO paymentdate needed?!
-				bigDecimalToBigInteger(supplierInvoice.amountDue()),
+				supplierInvoiceData.invoiceDate(),
+				supplierInvoiceData.dueDate(),
+				supplierInvoiceData.dueDate(), //TODO paymentdate needed?!
+				bigDecimalToBigInteger(supplierInvoiceData.amountDue()),
 				bigDecimalToBigInteger(invoiceAmounts.vatAmount()),
 				invoiceAmounts.currency(),
 				new BigInteger("1"), //TODO exchange rate needed?!
-				supplierInvoice.serialNumber(),
+				supplierInvoiceData.serialNumber(),
 				"", //TODO po-nr needed?!
 				"", //TODO ocr needed?!
-				mapAccountingAccounts(supplierInvoice),
+				mapAccountingAccounts(supplierInvoiceData),
 				new SupplierInvoiceRequest.Files(List.of(file)));
 	}
 
-	private DepositAccount mapDepositAccount(SupplierInvoice supplierInvoice) {
+	private DepositAccount mapDepositAccount(SupplierInvoiceData supplierInvoiceData) {
 		//TODO need to handle foreign accounts
-		return switch (supplierInvoice.paymentMethod().name()) {
-			case "Bankkonto" -> new DepositAccount("BANK_ACCOUNT", supplierInvoice.paymentMethod().number());
-			case "Plusgiro" -> new DepositAccount("PLUS_GIRO", supplierInvoice.paymentMethod().number());
-			case "Bankgiro" -> new DepositAccount("BANK_GIRO", supplierInvoice.paymentMethod().number());
-			default -> new DepositAccount(supplierInvoice.paymentMethod().name(), supplierInvoice.paymentMethod().number());
+		return switch (supplierInvoiceData.paymentMethod().name()) {
+			case "Bankkonto" -> new DepositAccount("BANK_ACCOUNT", supplierInvoiceData.paymentMethod().number());
+			case "Plusgiro" -> new DepositAccount("PLUS_GIRO", supplierInvoiceData.paymentMethod().number());
+			case "Bankgiro" -> new DepositAccount("BANK_GIRO", supplierInvoiceData.paymentMethod().number());
+			default -> new DepositAccount(supplierInvoiceData.paymentMethod().name(), supplierInvoiceData.paymentMethod().number());
 		};
 	}
 
@@ -111,10 +111,10 @@ public class SupplierInvoiceFacade {
 		return bigDecimal.multiply(new BigDecimal("100")).setScale(0, RoundingMode.HALF_UP).toBigInteger();
 	}
 
-	private SupplierInvoiceRequest.Accounts mapAccountingAccounts(SupplierInvoice supplierInvoice) {
-		InvoiceAmounts invoiceAmounts = supplierInvoice.invoiceAmounts();
-		BigDecimal netPrice = supplierInvoice.amountDue().subtract(invoiceAmounts.vatAmount());
-		return new SupplierInvoiceRequest.Accounts(List.of(new SupplierInvoiceRequest.AccountingAccount(2440, bigDecimalToBigInteger(supplierInvoice.amountDue()).negate()),
+	private SupplierInvoiceRequest.Accounts mapAccountingAccounts(SupplierInvoiceData supplierInvoiceData) {
+		InvoiceAmounts invoiceAmounts = supplierInvoiceData.invoiceAmounts();
+		BigDecimal netPrice = supplierInvoiceData.amountDue().subtract(invoiceAmounts.vatAmount());
+		return new SupplierInvoiceRequest.Accounts(List.of(new SupplierInvoiceRequest.AccountingAccount(2440, bigDecimalToBigInteger(supplierInvoiceData.amountDue()).negate()),
 				new SupplierInvoiceRequest.AccountingAccount(2641, bigDecimalToBigInteger(invoiceAmounts.vatAmount())),
 				new SupplierInvoiceRequest.AccountingAccount(5410, bigDecimalToBigInteger(netPrice))));
 	}

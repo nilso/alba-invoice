@@ -1,24 +1,33 @@
 package domain;
 
-import java.math.BigDecimal;
+import java.util.Optional;
 
-public record SupplierInvoice(
-		ClientInfo clientInfo,
-		SupplierInfo supplierInfo,
-		String invoiceDate,
-		String dueDate,
-		InvoiceAmounts invoiceAmounts,
-		User agent,
-		String serialNumber,
-		PaymentMethod paymentMethod,
-		BigDecimal amountDue,
-		Commission commission,
-		VatInformationTexts vatInformationTexts
-) {
-	public record ClientInfo(String name, Address invoiceAddress, String countryCode, String orgNo, String vatNumber, String invoiceNr) {
+public final class SupplierInvoice {
+	private final InvoiceId id;
+	private final SupplierId supplierId;
+	private final String serialNumber;
+	private final InvoiceId clientInvoiceReference;
 
+	public SupplierInvoice(InvoiceId id, SupplierId supplierId, String serialNumber, InvoiceId clientInvoiceReference) {
+		this.id = id;
+		this.supplierId = supplierId;
+		this.serialNumber = serialNumber;
+		this.clientInvoiceReference = clientInvoiceReference;
 	}
 
-	public record SupplierInfo(SupplierId id, String name, Address address, String reference, String vatNr, String countryCode) {
+	public SupplierId supplierId() {
+		return supplierId;
+	}
+
+	public String serialNumber() {
+		return serialNumber;
+	}
+
+	public InvoiceId id() {
+		return id;
+	}
+
+	public Optional<InvoiceId> clientInvoiceReference() {
+		return Optional.ofNullable(clientInvoiceReference);
 	}
 }

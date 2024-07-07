@@ -55,12 +55,13 @@ public class FXMain extends Application {
 		supplierFacade = new SupplierFacade(peHttpClient);
 		supplierService = new SupplierService(supplierFacade);
 		supplierInvoiceFacade = new SupplierInvoiceFacade(peHttpClient);
-		serialNumberService = new SerialNumberService(supplierInvoiceFacade, supplierService);
+		supplierInvoiceService = new SupplierInvoiceService(supplierInvoiceFacade);
+		serialNumberService = new SerialNumberService(supplierInvoiceService, supplierService);
 		supplierIdDocumentCreator = new SupplierIdDocumentCreator();
 		supplierIdDocumentService = new SupplierIdDocumentService(supplierService, bankAccountFacade, supplierIdDocumentCreator);
 		pdfCreator = new PdfCreator();
-		supplierInvoiceService = new SupplierInvoiceService();
-		tableDataService = new TableDataService(clientInvoiceService, userService, supplierService, serialNumberService, supplierInvoiceFacade);
+
+		tableDataService = new TableDataService(clientInvoiceService, userService, supplierService, serialNumberService, supplierInvoiceService);
 
 		footer = new Footer(supplierInvoiceService, pdfCreator, tableDataService);
 		table = new Table(tableDataService);

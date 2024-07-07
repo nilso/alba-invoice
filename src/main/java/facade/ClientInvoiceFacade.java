@@ -33,5 +33,4 @@ public class ClientInvoiceFacade {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		return date.format(formatter);
 	}
-
 }

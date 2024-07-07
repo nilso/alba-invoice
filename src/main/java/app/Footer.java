@@ -5,7 +5,7 @@ import java.util.List;
 
 import app.domain.ClientInvoiceTableItem;
 import domain.InvoiceId;
-import domain.SupplierInvoice;
+import domain.SupplierInvoiceData;
 import domain.SupplierInvoiceRequest;
 import domain.TableData;
 import javafx.collections.ListChangeListener.Change;
@@ -80,13 +80,13 @@ public class Footer {
 					log.warn("Could not find supplier for item: {}", item);
 					alert("KlientId saknas", "KlientId måste vara satt", AlertType.ERROR);
 				} else {
-					SupplierInvoice supplierInvoice = supplierInvoiceService.createSupplierInvoice(
+					SupplierInvoiceData supplierInvoiceData = supplierInvoiceService.createSupplierInvoiceData(
 							tableData.clientInvoice(),
 							tableData.serialNumber().get(),
 							tableData.supplier().get(),
 							tableData.user()
 					);
-					SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoice);
+					SupplierInvoiceRequest.File file = pdfCreator.createPdf(supplierInvoiceData);
 					fileNames.add(file.filePath());
 					table.getItems().remove(item);
 				}

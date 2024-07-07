@@ -9,30 +9,29 @@ import java.util.stream.Collectors;
 import domain.SerialNumber;
 import domain.Supplier;
 import domain.SupplierId;
-import domain.SupplierInvoiceResponse;
+import domain.SupplierInvoice;
 import domain.SupplierNameKey;
 import exception.GetCurrentSerialException;
-import facade.SupplierInvoiceFacade;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SerialNumberService {
 	private static Map<SupplierNameKey, SerialNumber> alreadyCreatedSeries;
 	private static int nrOfAlreadyIncrementedPrefix;
-	private final SupplierInvoiceFacade supplierInvoiceFacade;
+	private final SupplierInvoiceService supplierInvoiceService;
 	private final SupplierService supplierService;
 
-	public SerialNumberService(SupplierInvoiceFacade supplierInvoiceFacade,
+	public SerialNumberService(SupplierInvoiceService supplierInvoiceService,
 			SupplierService supplierService) {
-		this.supplierInvoiceFacade = supplierInvoiceFacade;
+		this.supplierInvoiceService = supplierInvoiceService;
 		this.supplierService = supplierService;
 		nrOfAlreadyIncrementedPrefix = 0;
 		alreadyCreatedSeries = new HashMap<>();
 	}
 
-	private static SerialNumber getHighestSerialNumber(List<SupplierInvoiceResponse> supplierInvoiceResponses) {
-		List<SerialNumber> serialNumbers = supplierInvoiceResponses.stream()
-				.map(SupplierInvoiceResponse::serialNumber)
+	private static SerialNumber getHighestSerialNumber(List<SupplierInvoice> supplierInvoice) {
+		List<SerialNumber> serialNumbers = supplierInvoice.stream()
+				.map(SupplierInvoice::serialNumber)
 				.map(SerialNumberService::extractSerialNumber)
 				.toList();
 
@@ -66,7 +65,7 @@ public class SerialNumberService {
 	}
 
 	private SerialNumber createNewSerial(SupplierNameKey supplierName,
-			List<SupplierInvoiceResponse> allSupplierInvoices) {
+			List<SupplierInvoice> allSupplierInvoices) {
 		if (alreadyCreatedSeries.containsKey(supplierName)) {
 			return alreadyCreatedSeries.get(supplierName);
 		}
@@ -74,7 +73,7 @@ public class SerialNumberService {
 		allSupplierInvoices = allSupplierInvoices.stream()
 				.filter(invoice -> isValidSerialNumber(invoice.serialNumber()))
 				.filter(invoice -> isAlbaSerial(invoice.serialNumber()))
-				.peek(invoice -> log.info("Found serial number: {} for klientId {} ", invoice.serialNumber(), invoice.supplierRef().supplierId()))
+				.peek(invoice -> log.info("Found serial number: {} for klientId {} ", invoice.serialNumber(), invoice.supplierId()))
 				.collect(Collectors.toList());
 
 		if (allSupplierInvoices.isEmpty()) {
@@ -106,12 +105,12 @@ public class SerialNumberService {
 
 	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers) throws Exception {
 		try {
-			List<SupplierInvoiceResponse> allSupplierInvoices = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+			List<SupplierInvoice> allSupplierInvoices = supplierInvoiceService.getAllSupplierInvoicesOneYearBack();
 			List<Supplier> allSuppliers = supplierService.getAllSuppliers();
 
 			Map<SupplierNameKey, List<SupplierId>> supplierIdsByName = mapSuppliersByName(suppliers, allSuppliers);
 
-			Map<SupplierNameKey, List<SupplierInvoiceResponse>> supplierInvoicesByName = mapInvoicesToSuppliers(supplierIdsByName, allSupplierInvoices);
+			Map<SupplierNameKey, List<SupplierInvoice>> supplierInvoicesByName = mapInvoicesToSuppliers(supplierIdsByName, allSupplierInvoices);
 
 			return mapInvoicesToSerialNumbers(supplierInvoicesByName, allSupplierInvoices);
 
@@ -137,13 +136,13 @@ public class SerialNumberService {
 		return resultMap;
 	}
 
-	public Map<SupplierNameKey, List<SupplierInvoiceResponse>> mapInvoicesToSuppliers(Map<SupplierNameKey, List<SupplierId>> supplierIdsByName,
-			List<SupplierInvoiceResponse> allInvoices) {
-		Map<SupplierNameKey, List<SupplierInvoiceResponse>> resultMap = new HashMap<>();
+	public Map<SupplierNameKey, List<SupplierInvoice>> mapInvoicesToSuppliers(Map<SupplierNameKey, List<SupplierId>> supplierIdsByName,
+			List<SupplierInvoice> allInvoices) {
+		Map<SupplierNameKey, List<SupplierInvoice>> resultMap = new HashMap<>();
 
 		supplierIdsByName.forEach((supplierNameKey, supplierIds) -> {
-			List<SupplierInvoiceResponse> filteredInvoices = allInvoices.stream()
-					.filter(invoice -> supplierIds.contains(invoice.supplierRef().supplierId()))
+			List<SupplierInvoice> filteredInvoices = allInvoices.stream()
+					.filter(invoice -> supplierIds.contains(invoice.supplierId()))
 					.collect(Collectors.toList());
 
 			resultMap.put(supplierNameKey, filteredInvoices);
@@ -152,8 +151,8 @@ public class SerialNumberService {
 		return resultMap;
 	}
 
-	public Map<SupplierNameKey, SerialNumber> mapInvoicesToSerialNumbers(Map<SupplierNameKey, List<SupplierInvoiceResponse>> supplierInvoicesByName,
-			List<SupplierInvoiceResponse> allSupplierInvoices) {
+	public Map<SupplierNameKey, SerialNumber> mapInvoicesToSerialNumbers(Map<SupplierNameKey, List<SupplierInvoice>> supplierInvoicesByName,
+			List<SupplierInvoice> allSupplierInvoices) {
 		Map<SupplierNameKey, SerialNumber> serialNumberMap = new HashMap<>();
 
 		supplierInvoicesByName.forEach((key, value) -> {
@@ -171,13 +170,13 @@ public class SerialNumberService {
 		return serialNumberMap;
 	}
 
-	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers, List<SupplierInvoiceResponse> allSupplierInvoices) throws Exception {
+	public Map<SupplierNameKey, SerialNumber> getCurrentSerialOrNewIfNone(List<Supplier> suppliers, List<SupplierInvoice> allSupplierInvoices) throws Exception {
 		try {
 			List<Supplier> allSuppliers = supplierService.getAllSuppliers();
 
 			Map<SupplierNameKey, List<SupplierId>> supplierIdsByName = mapSuppliersByName(suppliers, allSuppliers);
 
-			Map<SupplierNameKey, List<SupplierInvoiceResponse>> supplierInvoicesByName = mapInvoicesToSuppliers(supplierIdsByName, allSupplierInvoices);
+			Map<SupplierNameKey, List<SupplierInvoice>> supplierInvoicesByName = mapInvoicesToSuppliers(supplierIdsByName, allSupplierInvoices);
 
 			return mapInvoicesToSerialNumbers(supplierInvoicesByName, allSupplierInvoices);
 
@@ -187,13 +186,13 @@ public class SerialNumberService {
 		}
 	}
 
-	public SerialNumber getCurrentSerialOrNewIfNone(Supplier supplier, List<SupplierInvoiceResponse> allSupplierInvoices) {
+	public SerialNumber getCurrentSerialOrNewIfNone(Supplier supplier, List<SupplierInvoice> allSupplierInvoices) {
 		try {
 			List<Supplier> allSuppliers = supplierService.getAllSuppliers();
 
 			List<SupplierId> matchingSupplierId = findMatchingSupplierIdsByName(supplier, allSuppliers);
 
-			List<SupplierInvoiceResponse> matchingInvoices = findMatchingInvoices(matchingSupplierId, allSupplierInvoices);
+			List<SupplierInvoice> matchingInvoices = findMatchingInvoices(matchingSupplierId, allSupplierInvoices);
 
 			return mapInvoicesToSerialNumbers(new SupplierNameKey(supplier.name()), matchingInvoices, allSupplierInvoices);
 
@@ -210,16 +209,16 @@ public class SerialNumberService {
 				.collect(Collectors.toList());
 	}
 
-	public List<SupplierInvoiceResponse> findMatchingInvoices(List<SupplierId> supplierIds,
-			List<SupplierInvoiceResponse> allInvoices) {
+	public List<SupplierInvoice> findMatchingInvoices(List<SupplierId> supplierIds,
+			List<SupplierInvoice> allInvoices) {
 		return allInvoices.stream()
-				.filter(invoice -> supplierIds.contains(invoice.supplierRef().supplierId()))
+				.filter(invoice -> supplierIds.contains(invoice.supplierId()))
 				.collect(Collectors.toList());
 
 	}
 
-	public SerialNumber mapInvoicesToSerialNumbers(SupplierNameKey supplierNameKey, List<SupplierInvoiceResponse> matchingInvoices,
-			List<SupplierInvoiceResponse> allSupplierInvoices) {
+	public SerialNumber mapInvoicesToSerialNumbers(SupplierNameKey supplierNameKey, List<SupplierInvoice> matchingInvoices,
+			List<SupplierInvoice> allSupplierInvoices) {
 		SerialNumber serialNumber;
 		if (matchingInvoices.isEmpty()) {
 			log.info("No supplier invoices found for supplier with SupplierNameKey: {}", supplierNameKey);
