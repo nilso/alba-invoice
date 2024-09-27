@@ -98,7 +98,7 @@ public class SupplierInvoiceService {
 		}).toList();
 	}
 
-	public List<SupplierInvoice> getSupplierInvoicesBySupplierIds(List<SupplierId> supplierIds) throws Exception {
+	public List<SupplierInvoice> getSupplierInvoicesBySupplierIds(List<SupplierId> supplierIds) {
 		List<SupplierInvoice> supplierInvoices = new ArrayList<>();
 
 		supplierIds.forEach(supplierId -> {
