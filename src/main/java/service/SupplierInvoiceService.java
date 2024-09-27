@@ -5,6 +5,7 @@ import static util.InvoiceAmountCalculator.calculateSupplierInvoiceAmounts;
 import static util.VatInformationTextUtil.createVatInformationText;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import domain.InvoiceId;
 import domain.PaymentMethod;
 import domain.SerialNumber;
 import domain.Supplier;
+import domain.SupplierId;
 import domain.SupplierInvoice;
 import domain.SupplierInvoiceData;
 import domain.SupplierInvoiceResponse;
@@ -85,6 +87,33 @@ public class SupplierInvoiceService {
 
 	public List<SupplierInvoice> getAllSupplierInvoicesOneYearBack() throws Exception {
 		List<SupplierInvoiceResponse> supplierInvoiceResponses = supplierInvoiceFacade.fetchInvoicesOneYearBack();
+
+		//TODO clean this up.
+		return supplierInvoiceResponses.stream().map(supplierInvoiceResponse -> {
+			if (supplierInvoiceResponse.clientInvoiceIds() == null) {
+				return new SupplierInvoice(supplierInvoiceResponse.id(), supplierInvoiceResponse.supplierRef().supplierId(), supplierInvoiceResponse.serialNumber(), null);
+			}
+			InvoiceId supplierInvoiceReference = supplierInvoiceResponse.clientInvoiceIds().clientInvoiceReference().stream().findFirst().orElse(null);
+			return new SupplierInvoice(supplierInvoiceResponse.id(), supplierInvoiceResponse.supplierRef().supplierId(), supplierInvoiceResponse.serialNumber(), supplierInvoiceReference);
+		}).toList();
+	}
+
+	public List<SupplierInvoice> getSupplierInvoicesBySupplierIds(List<SupplierId> supplierIds) throws Exception {
+		List<SupplierInvoice> supplierInvoices = new ArrayList<>();
+
+		supplierIds.forEach(supplierId -> {
+			try {
+				supplierInvoices.addAll(getSupplierInvoicesBySupplierId(supplierId));
+			} catch (Exception e) {
+				log.error("Failed to fetch supplier invoices for supplierId: {}", supplierId, e);
+			}
+		});
+
+		return supplierInvoices;
+	}
+
+	public List<SupplierInvoice> getSupplierInvoicesBySupplierId(SupplierId supplierId) throws Exception {
+		List<SupplierInvoiceResponse> supplierInvoiceResponses = supplierInvoiceFacade.fetchInvoiceBySupplierId(supplierId);
 
 		//TODO clean this up.
 		return supplierInvoiceResponses.stream().map(supplierInvoiceResponse -> {

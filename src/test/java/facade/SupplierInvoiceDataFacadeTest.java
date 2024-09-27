@@ -40,8 +40,11 @@ class SupplierInvoiceDataFacadeTest {
 	@Test
 	void actuallyFetch() throws Exception {
 		PEHttpClient realClient = new PEHttpClient();
-		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient);
-		List<SupplierInvoiceResponse> supplierInvoiceResponses = realFacade.fetchInvoicesOneYearBack().stream().filter(invoice -> invoice.supplierRef().supplierId().equals(new SupplierId("271909"))).toList();
+		SupplierInvoiceFacade facade = new SupplierInvoiceFacade(realClient);
+		List<SupplierInvoiceResponse> supplierInvoiceResponses = facade.fetchInvoicesOneYearBack()
+				.stream()
+				.filter(invoice -> invoice.supplierRef().supplierId().equals(new SupplierId("271909")))
+				.toList();
 		System.out.println("Found this many: " + supplierInvoiceResponses.size());
 		System.out.println("Found these: " + supplierInvoiceResponses);
 	}
@@ -52,5 +55,13 @@ class SupplierInvoiceDataFacadeTest {
 		PEHttpClient realClient = new PEHttpClient();
 		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient);
 		System.out.println(realFacade.fetchInvoiceById("2218090"));
+	}
+
+	@Disabled
+	@Test
+	void actuallyFetchBySupplierId() throws Exception {
+		PEHttpClient realClient = new PEHttpClient();
+		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient);
+		System.out.println(realFacade.fetchInvoiceBySupplierId(new SupplierId("196199")));
 	}
 }

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import config.Config;
 import domain.InvoiceAmounts;
+import domain.SupplierId;
 import domain.SupplierInvoiceData;
 import domain.SupplierInvoiceRequest;
 import domain.SupplierInvoiceRequest.DepositAccount;
@@ -42,6 +43,21 @@ public class SupplierInvoiceFacade {
 		}
 
 		log.info("Fetched {} supplier invoices for the financial year starting from: {}", supplierInvoicesResponse.size(), oneYearAgo);
+		return supplierInvoicesResponse.supplierInvoiceResponses();
+	}
+
+	public List<SupplierInvoiceResponse> fetchInvoiceBySupplierId(SupplierId supplierId) throws Exception {
+		String endpoint = String.format("/company/%s/supplier/invoice?supplierId=%s", Config.getClientId(), supplierId.getId());
+
+		String body = peHttpClient.httpGet(endpoint);
+
+		SupplierInvoicesResponse supplierInvoicesResponse = objectMapper.readValue(body, SupplierInvoicesResponse.class);
+		if (supplierInvoicesResponse.size() == 0) {
+			log.info("No supplier invoices found for supplierId: {}", supplierId);
+			return List.of();
+		}
+
+		log.info("Fetched supplierInvoice: {} for supplierId: {}", supplierInvoicesResponse, supplierId);
 		return supplierInvoicesResponse.supplierInvoiceResponses();
 	}
 

@@ -40,6 +40,7 @@ public class TableDataService {
 	Map<SupplierNameKey, SerialNumber> currentSerialNumbersBySupplierNameKey;
 	Map<InvoiceId, ClientInvoice> clientInvoices;
 	List<SupplierInvoice> supplierInvoices;
+	List<SupplierId> allSupplierIds;
 	int daysBack;
 
 	public TableDataService(ClientInvoiceService clientInvoiceService,
@@ -72,7 +73,7 @@ public class TableDataService {
 	public void addSupplier(InvoiceId invoiceId, SupplierId supplierId, ClientInvoiceTableItem item) {
 		Supplier supplier = supplierService.getSupplier(supplierId);
 		suppliersByInvoiceId.put(invoiceId, supplier);
-		SerialNumber serialNumber = serialNumberService.getCurrentSerialOrNewIfNone(supplier, supplierInvoices);
+		SerialNumber serialNumber = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
 		currentSerialNumbersBySupplierNameKey.put(new SupplierNameKey(supplier.name()), serialNumber);
 		item.setSupplier(supplier);
 		item.setLastSerialNumber(serialNumber.fullSerialNumber());
@@ -87,9 +88,9 @@ public class TableDataService {
 		clientInvoices = clientInvoiceService.getUnprocessedClientInvoices(daysBack).stream().collect(Collectors.toMap(ClientInvoice::id, c -> c));
 		usersByInvoiceId = userService.getUserMap(clientInvoices.values().stream().toList());
 		suppliersByInvoiceId = supplierService.getSupplierMap(clientInvoices.values().stream().toList());
-		supplierInvoices = supplierInvoiceService.getAllSupplierInvoicesOneYearBack();
-		currentSerialNumbersBySupplierNameKey = serialNumberService.getCurrentSerialOrNewIfNone(suppliersByInvoiceId.values().stream().toList(),
-				supplierInvoices);
+		allSupplierIds = suppliersByInvoiceId.values().stream().map(Supplier::id).toList();
+		supplierInvoices = supplierInvoiceService.getSupplierInvoicesBySupplierIds(allSupplierIds);
+		currentSerialNumbersBySupplierNameKey = serialNumberService.getCurrentSerialOrNewIfNone(suppliersByInvoiceId.values().stream().toList());
 
 	}
 
