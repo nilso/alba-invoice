@@ -28,6 +28,15 @@ public class ClientInvoiceFacade {
 		return clientInvoicesResponse.clientInvoices();
 	}
 
+	public List<ClientInvoiceResponse> fetchClientInvoicesById(String id) throws Exception {
+		String endpoint = String.format("/company/%s/client/invoice/%s", Config.getClientId(), id);
+
+		String body = peHttpClient.httpGet(endpoint);
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		return List.of(objectMapper.readValue(body, ClientInvoiceResponse.class));
+	}
+
 	private String getFormattedDate(int daysBack) {
 		LocalDate date = LocalDate.now().minusDays(daysBack);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

@@ -230,7 +230,7 @@ public class PdfCreator {
 				BigDecimal grossPrice = productRow.netPrice().add(vat).setScale(2, RoundingMode.HALF_UP);
 
 				PDField productDescriptionField = acroForm.getField("f_productRowDescription" + rowNo);
-				productDescriptionField.setValue(productRow.description());
+				productDescriptionField.setValue(productRow.description().replace("\n", " "));
 
 				PDField productRowNetPriceField = acroForm.getField("f_productRowNetPrice" + rowNo);
 				productRowNetPriceField.setValue(formatBigDecimal(productRow.netPrice()));
