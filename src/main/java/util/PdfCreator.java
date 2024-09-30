@@ -273,7 +273,7 @@ public class PdfCreator {
 			clientAddress2Field.setValue(address.address2());
 
 			PDField clientPostalField = acroForm.getField("f_clientPostal");
-			clientPostalField.setValue(address.zipCode() + " " + address.state());
+			clientPostalField.setValue(address.zipCode() + " " + address.state() + ", " + address.country());
 
 			PDField clientIdentificationNumberField = acroForm.getField("f_clientIdentificationNumber");
 			if (clientInfo.countryCode().equals("SE")) {
