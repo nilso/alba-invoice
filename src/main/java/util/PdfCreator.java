@@ -328,7 +328,7 @@ public class PdfCreator {
 	public static String formatBigDecimal(BigDecimal number) {
 		DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
 		symbols.setGroupingSeparator(' ');
-		DecimalFormat decimalFormat = new DecimalFormat("#,###.##", symbols);
+		DecimalFormat decimalFormat = new DecimalFormat("#,###.00", symbols);
 		decimalFormat.setGroupingSize(3);
 		decimalFormat.setParseBigDecimal(true);
 		return decimalFormat.format(number);
