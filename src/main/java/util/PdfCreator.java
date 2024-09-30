@@ -10,8 +10,11 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -155,13 +158,13 @@ public class PdfCreator {
 		}
 
 		PDField netPriceField = acroForm.getField("f_netPrice");
-		netPriceField.setValue(invoiceAmounts.netPrice().toString());
+		netPriceField.setValue(formatBigDecimal(invoiceAmounts.netPrice()));
 
 		PDField vatField = acroForm.getField("f_vat");
-		vatField.setValue(supplierInvoiceData.invoiceAmounts().vatAmount().toString());
+		vatField.setValue(formatBigDecimal(supplierInvoiceData.invoiceAmounts().vatAmount()));
 
 		PDField grossPriceField = acroForm.getField("f_grossPrice");
-		grossPriceField.setValue(invoiceAmounts.grossPriceRounded().toString());
+		grossPriceField.setValue(formatBigDecimal(invoiceAmounts.grossPriceRounded()));
 
 		PDField commissionCurrencyField = acroForm.getField("f_commissionCurrency");
 		if (SETemplate) {
@@ -181,13 +184,13 @@ public class PdfCreator {
 		commissionRateField.setValue(commissionRateInPercent + "%");
 
 		PDField netCommissionField = acroForm.getField("f_netCommission");
-		netCommissionField.setValue(supplierInvoiceData.commission().netCommission().negate().toString());
+		netCommissionField.setValue(formatBigDecimal(supplierInvoiceData.commission().netCommission().negate()));
 
 		PDField commissionVatField = acroForm.getField("f_commissionVat");
-		commissionVatField.setValue(supplierInvoiceData.commission().commissionVatAmount().negate().toString());
+		commissionVatField.setValue(formatBigDecimal(supplierInvoiceData.commission().commissionVatAmount().negate()));
 
 		PDField grossCommissionField = acroForm.getField("f_grossCommission");
-		grossCommissionField.setValue(supplierInvoiceData.commission().grossCommission().negate().toString());
+		grossCommissionField.setValue(formatBigDecimal(supplierInvoiceData.commission().grossCommission().negate()));
 
 		if (supplierInvoiceData.commission().commissionRoundingAmount().isPresent()) {
 			PDField commissionRoundingTextField = acroForm.getField("f_commissionRoundingText");
@@ -198,7 +201,7 @@ public class PdfCreator {
 			}
 
 			PDField commissionRoundingAmountField = acroForm.getField("f_commissionRoundingAmount");
-			commissionRoundingAmountField.setValue(supplierInvoiceData.commission().commissionRoundingAmount().get().toString());
+			commissionRoundingAmountField.setValue(formatBigDecimal(supplierInvoiceData.commission().commissionRoundingAmount().get()));
 		}
 
 		if (supplierInvoiceData.vatInformationTexts().supplierVatInformationText().isPresent()) {
@@ -210,7 +213,7 @@ public class PdfCreator {
 		amountDueCurrencyField.setValue(invoiceAmounts.currency());
 
 		PDField amountDueField = acroForm.getField("f_amountDue");
-		amountDueField.setValue(supplierInvoiceData.amountDue().toString());
+		amountDueField.setValue(formatBigDecimal(supplierInvoiceData.amountDue()));
 	}
 
 	private static void writeRows(PDAcroForm acroForm, SupplierInvoiceData supplierInvoiceData) throws IOException {
@@ -230,13 +233,13 @@ public class PdfCreator {
 				productDescriptionField.setValue(productRow.description());
 
 				PDField productRowNetPriceField = acroForm.getField("f_productRowNetPrice" + rowNo);
-				productRowNetPriceField.setValue(productRow.netPrice().toString());
+				productRowNetPriceField.setValue(formatBigDecimal(productRow.netPrice()));
 
 				PDField productRowVatField = acroForm.getField("f_productRowVat" + rowNo);
-				productRowVatField.setValue(vat.toString());
+				productRowVatField.setValue(formatBigDecimal(vat));
 
 				PDField productRowGrossPriceField = acroForm.getField("f_productRowGrossPrice" + rowNo);
-				productRowGrossPriceField.setValue(grossPrice.toString());
+				productRowGrossPriceField.setValue(formatBigDecimal(grossPrice));
 				rowNo.getAndIncrement();
 
 			} catch (IOException e) {
@@ -256,7 +259,7 @@ public class PdfCreator {
 				}
 
 				PDField roundingAmountField = acroForm.getField("f_productRowRoundingAmount");
-				roundingAmountField.setValue(invoiceAmounts.roundingAmount().get().negate().toString());
+				roundingAmountField.setValue(formatBigDecimal(invoiceAmounts.roundingAmount().get().negate()));
 			}
 
 			PDField clientNameField = acroForm.getField("f_clientName");
@@ -320,5 +323,14 @@ public class PdfCreator {
 			intArray[i] = byteArray[i] & 0xFF;  // Convert each byte to an unsigned integer
 		}
 		return intArray;
+	}
+
+	public static String formatBigDecimal(BigDecimal number) {
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
+		symbols.setGroupingSeparator(' ');
+		DecimalFormat decimalFormat = new DecimalFormat("#,###.##", symbols);
+		decimalFormat.setGroupingSize(3);
+		decimalFormat.setParseBigDecimal(true);
+		return decimalFormat.format(number);
 	}
 }
