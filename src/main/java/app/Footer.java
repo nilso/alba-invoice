@@ -1,6 +1,7 @@
 package app;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import app.domain.ClientInvoiceTableItem;
@@ -62,6 +63,7 @@ public class Footer {
 			Button button,
 			TableView<ClientInvoiceTableItem> table) {
 		List<ClientInvoiceTableItem> items = new ArrayList<>(incomingItems);
+		items.sort(Comparator.comparing(ClientInvoiceTableItem::invoiceNr));
 		log.info("Button clicked for items: {}", items);
 		button.setDisable(true);
 		List<String> fileNames = new ArrayList<>();
