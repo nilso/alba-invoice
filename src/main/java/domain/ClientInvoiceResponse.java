@@ -20,8 +20,15 @@ public record ClientInvoiceResponse(
 		double amount,
 		double vat,
 		String currency,
-		Fields fields
+		Fields fields,
+		@JsonProperty("self-invoice-references") SelfInvoiceReferences selfInvoiceReferences
+
 ) {
 	public record Fields(List<Field> fields) {
+	}
+
+	public record SelfInvoiceReferences(
+			@JsonProperty("supplier-invoice-ids") List<String> supplierInvoiceIds
+	) {
 	}
 }

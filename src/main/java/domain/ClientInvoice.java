@@ -23,7 +23,8 @@ public record ClientInvoice(
 		BigDecimal vatAmount,
 		String currency,
 		Optional<BigDecimal> commissionRate,
-		Optional<SupplierId> supplierId
+		Optional<SupplierId> supplierId,
+		Optional<String> supplierInvoiceReference
 ) {
 	public ClientInvoice withUITableData(BigDecimal commissionRate) {
 		return ClientInvoice.builder()
@@ -43,6 +44,7 @@ public record ClientInvoice(
 				.currency(currency)
 				.commissionRate(Optional.of(commissionRate))
 				.supplierId(supplierId)
+				.supplierInvoiceReference(supplierInvoiceReference)
 				.build();
 
 	}

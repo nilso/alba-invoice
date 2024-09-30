@@ -50,7 +50,6 @@ public class Table {
 		table.getColumns().add(createSupplierNameColumn());
 		table.getColumns().add(createSupplierIdTable());
 		table.getColumns().add(createSerialNumberColumn());
-		table.getColumns().add(createSupplierInvoiceReferenceColumn());
 
 		table.setPlaceholder(new Label("Inga fakturor att visa för perioden"));
 
@@ -158,18 +157,6 @@ public class Table {
 		return serialNumberColumn;
 	}
 
-	private TableColumn<ClientInvoiceTableItem, String> createSupplierInvoiceReferenceColumn() {
-		TableColumn<ClientInvoiceTableItem, String> supplierInvoiceReferenceColumn = new TableColumn<>("Självfaktura");
-		supplierInvoiceReferenceColumn.setCellValueFactory(data -> {
-			if (data.getValue().supplierInvoiceReference().isEmpty()) {
-				return new SimpleStringProperty("");
-			}
-			return new SimpleStringProperty(data.getValue().supplierInvoiceReference().get());
-		});
-		supplierInvoiceReferenceColumn.setMinWidth(150);
-		return supplierInvoiceReferenceColumn;
-	}
-
 	private void alert(String title, String message) {
 		Alert alert = new Alert(Alert.AlertType.ERROR);
 		alert.setTitle(title);
@@ -189,16 +176,14 @@ public class Table {
 		tableDatas.forEach(data -> {
 			log.info("Populating table with data: {}", data);
 			ClientInvoice clientInvoice = data.clientInvoice();
-			String supplierInvoiceReference = tableDataService.getSupplierInvoiceReference(clientInvoice.id());
 			String fullSerialNumber = data.serialNumber().map(SerialNumber::fullSerialNumber).orElse("");
-			table.getItems().add(mapClientInvoiceTableItem(clientInvoice, fullSerialNumber, data.supplier().orElse(null), supplierInvoiceReference));
+			table.getItems().add(mapClientInvoiceTableItem(clientInvoice, fullSerialNumber, data.supplier().orElse(null)));
 		});
 	}
 
 	private static ClientInvoiceTableItem mapClientInvoiceTableItem(ClientInvoice clientInvoice,
 			String fullSerialNumber,
-			Supplier supplier,
-			String supplierInvoiceReference) {
+			Supplier supplier) {
 
 		String commissionRate;
 		if (clientInvoice.commissionRate().isEmpty()) {
@@ -215,7 +200,7 @@ public class Table {
 				commissionRate,
 				fullSerialNumber,
 				supplier,
-				supplierInvoiceReference
+				clientInvoice.supplierInvoiceReference().orElse("")
 		);
 	}
 

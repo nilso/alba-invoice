@@ -18,7 +18,7 @@ import domain.SupplierId;
 import domain.SupplierInvoiceResponse;
 
 @ExtendWith(MockitoExtension.class)
-class SupplierInvoiceDataFacadeTest {
+class SupplierInvoiceFacadeTest {
 	@Mock
 	private PEHttpClient peHttpClient;
 	@InjectMocks
@@ -54,7 +54,7 @@ class SupplierInvoiceDataFacadeTest {
 	void actuallyFetchById() throws Exception {
 		PEHttpClient realClient = new PEHttpClient();
 		SupplierInvoiceFacade realFacade = new SupplierInvoiceFacade(realClient);
-		System.out.println(realFacade.fetchInvoiceById("2218090"));
+		System.out.println(realFacade.fetchInvoiceById("2806888"));
 	}
 
 	@Disabled

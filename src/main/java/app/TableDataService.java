@@ -85,7 +85,8 @@ public class TableDataService {
 	}
 
 	public void init() throws Exception {
-		clientInvoices = clientInvoiceService.getUnprocessedClientInvoices(daysBack).stream().collect(Collectors.toMap(ClientInvoice::id, c -> c));
+		clientInvoices = clientInvoiceService.getUnprocessedClientInvoices(daysBack).stream()
+				.collect(Collectors.toMap(ClientInvoice::id, c -> c));
 		usersByInvoiceId = userService.getUserMap(clientInvoices.values().stream().toList());
 		suppliersByInvoiceId = supplierService.getSupplierMap(clientInvoices.values().stream().toList());
 		allSupplierIds = suppliersByInvoiceId.values().stream().map(Supplier::id).toList();

@@ -13,7 +13,6 @@ import domain.ClientInvoiceResponse;
 import domain.ClientResponse;
 import domain.Field;
 import domain.ProductRow;
-import domain.SerialNumber;
 import domain.SupplierId;
 import facade.ClientFacade;
 import facade.ClientInvoiceFacade;
@@ -37,8 +36,6 @@ public class ClientInvoiceService {
 			return List.of();
 		}
 
-		//TODO filtrera allt som har länkar till leverantörsfakturor.
-
 		List<ClientInvoice> clientInvoices = clientInvoiceResponses.stream()
 				.filter(ClientInvoiceResponse::certified)
 				.map(clientInvoiceResponse -> {
@@ -49,6 +46,7 @@ public class ClientInvoiceService {
 						throw new RuntimeException("Failed to map client invoice: " + e);
 					}
 				})
+				.filter(clientInvoice -> clientInvoice.supplierInvoiceReference().isEmpty())
 				.toList();
 
 		log.info("Client invoices fetched: {}", clientInvoices);
@@ -76,6 +74,8 @@ public class ClientInvoiceService {
 
 		Client client = mapClient(clientResponse);
 
+		Optional<String> selfInvoiceReference = parseSupplierInvoiceReference(clientInvoiceResponse);
+
 		return new ClientInvoice(
 				clientInvoiceResponse.id(),
 				client,
@@ -92,7 +92,8 @@ public class ClientInvoiceService {
 				vatAmount,
 				clientInvoiceResponse.currency(),
 				commissionRate,
-				supplierId);
+				supplierId,
+				selfInvoiceReference);
 	}
 
 	private Optional<SupplierId> parseSupplierId(String customFieldString) {
@@ -120,14 +121,6 @@ public class ClientInvoiceService {
 		return Optional.of(bigDecimal.divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP));
 	}
 
-	private Optional<String> parseSerialNumber(String customFieldString) {
-		if (customFieldString == null || customFieldString.isEmpty()) {
-			return Optional.empty();
-		}
-
-		return Optional.of(customFieldString);
-	}
-
 	private static BigDecimal zeroPaddedDoubleToBigDecimal(double value) {
 		return BigDecimal.valueOf(value)
 				.setScale(2, RoundingMode.HALF_UP)
@@ -151,5 +144,20 @@ public class ClientInvoiceService {
 				clientResponse.vatNumber(),
 				clientResponse.orgNo(),
 				clientResponse.countryCode());
+	}
+
+	private Optional<String> parseSupplierInvoiceReference(ClientInvoiceResponse clientInvoiceResponse) {
+
+		if (clientInvoiceResponse.selfInvoiceReferences().supplierInvoiceIds() == null) {
+			return Optional.empty();
+		}
+
+		log.info("Number of self invoice references {} on invoice: {}",
+				clientInvoiceResponse.selfInvoiceReferences().supplierInvoiceIds().size(),
+				clientInvoiceResponse.invoiceNr());
+
+		return clientInvoiceResponse.selfInvoiceReferences().supplierInvoiceIds().stream()
+				.findFirst();
+
 	}
 }
