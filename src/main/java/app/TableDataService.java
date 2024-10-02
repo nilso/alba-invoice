@@ -73,7 +73,7 @@ public class TableDataService {
 	public void addSupplier(InvoiceId invoiceId, SupplierId supplierId, ClientInvoiceTableItem item) {
 		Supplier supplier = supplierService.getSupplier(supplierId);
 		suppliersByInvoiceId.put(invoiceId, supplier);
-		SerialNumber serialNumber = serialNumberService.getCurrentSerialOrNewIfNone(supplier);
+		SerialNumber serialNumber = serialNumberService.getCurrentSerialNumber(supplier);
 		currentSerialNumbersBySupplierNameKey.put(new SupplierNameKey(supplier.name()), serialNumber);
 		item.setSupplier(supplier);
 		item.setLastSerialNumber(serialNumber.fullSerialNumber());
@@ -91,7 +91,7 @@ public class TableDataService {
 		suppliersByInvoiceId = supplierService.getSupplierMap(clientInvoices.values().stream().toList());
 		allSupplierIds = suppliersByInvoiceId.values().stream().map(Supplier::id).toList();
 		supplierInvoices = supplierInvoiceService.getSupplierInvoicesBySupplierIds(allSupplierIds);
-		currentSerialNumbersBySupplierNameKey = serialNumberService.getCurrentSerialOrNewIfNone(suppliersByInvoiceId.values().stream().toList());
+		currentSerialNumbersBySupplierNameKey = serialNumberService.getCurrentSerialNumber(suppliersByInvoiceId.values().stream().toList());
 
 	}
 
@@ -103,7 +103,7 @@ public class TableDataService {
 			Optional<SerialNumber> currentSerialNumber = Optional.empty();
 			if (suppliersByInvoiceId.containsKey(clientInvoice.id())) {
 				supplier = Optional.of(suppliersByInvoiceId.get(clientInvoice.id()));
-				currentSerialNumber = Optional.of(currentSerialNumbersBySupplierNameKey.get(new SupplierNameKey(supplier.get().name())));
+				currentSerialNumber = Optional.ofNullable(currentSerialNumbersBySupplierNameKey.get(new SupplierNameKey(supplier.get().name())));
 			}
 			TableData data = new TableData(
 					clientInvoice,
@@ -115,14 +115,5 @@ public class TableDataService {
 		}
 
 		return uiData;
-	}
-
-	public String getSupplierInvoiceReference(InvoiceId clientInvoiceId) {
-		return supplierInvoices.stream()
-				.filter(supplierInvoice -> supplierInvoice.clientInvoiceReference().isPresent()
-						&& supplierInvoice.clientInvoiceReference().get().equals(clientInvoiceId))
-				.findFirst()
-				.map(SupplierInvoice::serialNumber)
-				.orElse("");
 	}
 }

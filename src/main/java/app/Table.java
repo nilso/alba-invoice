@@ -14,6 +14,7 @@ import domain.Supplier;
 import domain.SupplierId;
 import domain.TableData;
 import exception.GetSupplierException;
+import exception.NoAvailableSerialNoException;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Alert;
@@ -138,6 +139,10 @@ public class Table {
 				log.warn("Failed to get supplier: {}", newValue, e);
 				alert("Felaktigt klientId",
 						String.format("Lyckades inte hitta klient med KlientId : %s, dubbelkolla att det stämmer", newValue));
+			} catch (NoAvailableSerialNoException e) {
+				log.warn("No available serialNumber for SupplierId: {}", newValue, e);
+				alert("Saknas löpnummer",
+						String.format("Saknas löpnummer för klient med id: %s senaste året, skapa en första faktura manuellt", newValue));
 			} catch (Exception e) {
 				log.warn("Failed to get serial number for supplier: {}", newValue, e);
 				alert("Felaktigt klientId",

@@ -326,12 +326,13 @@ public class PdfCreator {
 	}
 
 	public static String formatBigDecimal(BigDecimal number) {
-		DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
+		Locale locale = Locale.US;
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols(locale);
 		symbols.setGroupingSeparator(' ');
 		symbols.setDecimalSeparator('.');
 		DecimalFormat decimalFormat = new DecimalFormat("#,##0.00", symbols);
 		decimalFormat.setGroupingSize(3);
 		decimalFormat.setParseBigDecimal(true);
-		return decimalFormat.format(number);
+		return decimalFormat.format(number).replace("\u2212", "-");
 	}
 }

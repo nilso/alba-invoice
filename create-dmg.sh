@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Define variables
-APP_NAME="AlbaInvoice"
+APP_NAME="AlbaInvoice0930"
 MAIN_JAR="alba-invoice-1.0-SNAPSHOT.jar"
 MAIN_CLASS="app.FXMain"
 VERSION="1.0"

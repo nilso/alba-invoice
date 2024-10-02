@@ -35,8 +35,7 @@ build/
 .DS_Store
 
 output.pdf
-AlbaInvoice-1.0.dmg
-AlbaInvoiceTest-1.0.dmg
+*.dmg
 dependency-reduced-pom.xml
 out/
 src/main/resources/config.properties
