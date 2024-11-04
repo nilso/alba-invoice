@@ -102,7 +102,8 @@ public class SerialNumberService {
 
 	private static SerialNumber extractSerialNumber(String input) {
 		if (!isValidSerialNumber(input)) {
-			throw new IllegalArgumentException(String.format("Input must contain a hyphen (-) but was %s", input));
+			log.info("Input must contain a hyphen (-) but was {}", input);
+			return new SerialNumber("", 0);
 		}
 
 		String[] parts = input.split("-");
